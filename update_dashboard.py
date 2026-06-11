@@ -37,7 +37,7 @@ F_DATE = "_submission_time"
 F_DES  = "des_typ"
 F_GEO  = "__003"
 F_NEED = "__006"
-F_RESP = "__007"
+F_RESP = "data_collector"
 
 # Flood fields
 FL = {
@@ -53,6 +53,8 @@ FL = {
     "deaths":      "flood/flood_drowning_deaths",
     "fish_pts":    "flood/flood_fish_pts",
     "displaced":   "flood/flood_displaced",
+    "sick_men":    "flood/flood_sick_men",
+    "sick_women":  "flood/flood_sick_women",
 }
 
 # Rainfall fields (কত ঘন্টা বৃষ্টি হয়েছে is now an integer field in KoboToolbox)
@@ -67,39 +69,45 @@ R = {
 
 # Heatwave fields
 H = {
-    "days":      "heat/heat_days",
-    "avg_temp":  "heat/heat_avg_temp",
-    "sick":      "heat/heat_sick_people",
-    "treated":   "heat/heat_treated",
-    "livestock": "heat/heat_livestock_death",
-    "poultry":   "heat/heat_poultry_death",
-    "agri":      "heat/heat_agri_land",
-    "schools":   "heat/heat_school_closed",
-    "displaced": "heat/heat_displaced",
+    "days":       "heat/heat_days",
+    "avg_temp":   "heat/heat_avg_temp",
+    "sick":       "heat/heat_sick_people",
+    "sick_men":   "heat/heat_sick_men",
+    "sick_women": "heat/heat_sick_women",
+    "treated":    "heat/heat_treated",
+    "livestock":  "heat/heat_livestock_death",
+    "poultry":    "heat/heat_poultry_death",
+    "agri":       "heat/heat_agri_land",
+    "schools":    "heat/heat_school_closed",
+    "displaced":  "heat/heat_displaced",
 }
 
 # Cold wave fields
 C = {
-    "days":      "cold/cold_days",
-    "avg_temp":  "cold/cold_avg_temp",
-    "sick":      "cold/cold_sick_people",
-    "treated":   "cold/cold_treated",
-    "livestock": "cold/cold_livestock_death",
-    "poultry":   "cold/cold_poultry_death",
-    "agri":      "cold/cold_agri_land",
-    "schools":   "cold/cold_school_closed",
+    "days":       "cold/cold_days",
+    "avg_temp":   "cold/cold_avg_temp",
+    "sick":       "cold/cold_sick_people",
+    "sick_men":   "cold/cold_sick_men",
+    "sick_women": "cold/cold_sick_women",
+    "treated":    "cold/cold_treated",
+    "livestock":  "cold/cold_livestock_death",
+    "poultry":    "cold/cold_poultry_death",
+    "agri":       "cold/cold_agri_land",
+    "schools":    "cold/cold_school_closed",
 }
 
 # Drought fields
 D = {
-    "days":      "drought/drought_days",
-    "agri":      "drought/drought_agri_land",
-    "treated":   "drought/drought_treated",
-    "livestock": "drought/drought_livestock_death",
-    "poultry":   "drought/drought_poultry_death",
-    "schools":   "drought/drought_school_closed",
-    "displaced": "drought/drought_displaced",
-    "food_hh":   "drought/drought_food_hh",
+    "days":       "drought/drought_days",
+    "agri":       "drought/drought_agri_land",
+    "treated":    "drought/drought_treated",
+    "sick_men":   "drought/drought_sick_men",
+    "sick_women": "drought/drought_sick_women",
+    "livestock":  "drought/drought_livestock_death",
+    "poultry":    "drought/drought_poultry_death",
+    "schools":    "drought/drought_school_closed",
+    "displaced":  "drought/drought_displaced",
+    "food_hh":    "drought/drought_food_hh",
 }
 
 # Union code → display name (ইউনিয়ন কোড → নাম)
@@ -189,6 +197,10 @@ def process(results):
                      nv(rec, D["livestock"]))
         displaced = (nv(rec, FL["displaced"])+ nv(rec, R["displaced"]) +
                      nv(rec, H["displaced"]) + nv(rec, D["displaced"]))
+        sick_men  = (nv(rec, FL["sick_men"]) + nv(rec, H["sick_men"]) +
+                     nv(rec, C["sick_men"])  + nv(rec, D["sick_men"]))
+        sick_women= (nv(rec, FL["sick_women"])+ nv(rec, H["sick_women"]) +
+                     nv(rec, C["sick_women"])+ nv(rec, D["sick_women"]))
 
         rows.append({
             "upazila":        UZ_MAP.get(uz_code, uz_code) or "Unknown",
@@ -199,7 +211,7 @@ def process(results):
             "lat":            lat,
             "lon":            lon,
             "needs":          str(rec.get(F_NEED, '') or '')[:80],
-            "respondent":     str(rec.get(F_RESP, '') or ''),
+            "respondent":     str(rec.get(F_RESP, '') or '').strip(),
             "homes":          int(homes),
             "agri":           round(agri, 1),
             "schools":        int(schools),
@@ -207,6 +219,8 @@ def process(results):
             "deaths":         int(deaths),
             "livestock":      int(livestock),
             "displaced":      int(displaced),
+            "sick_men":       int(sick_men),
+            "sick_women":     int(sick_women),
             "flood_villages": int(nv(rec, FL["villages"])),
             "rain_villages":  int(nv(rec, R["villages"])),
         })
@@ -222,6 +236,8 @@ def process(results):
         "treated":     int(sm("treated")),
         "livestock":   int(sm("livestock")),
         "displaced":   int(sm("displaced")),
+        "sick_men":    int(sm("sick_men")),
+        "sick_women":  int(sm("sick_women")),
     }
 
     print(f"\n📊 Totals across all {len(rows)} submissions:")
@@ -236,10 +252,12 @@ def process(results):
         if u not in uz_map:
             uz_map[u] = {"name":u,"submissions":0,"homes":0,"agri":0,
                          "schools":0,"deaths":0,"treated":0,"livestock":0,
-                         "displaced":0,"flood_villages":0,"rain_villages":0}
+                         "displaced":0,"sick_men":0,"sick_women":0,
+                         "flood_villages":0,"rain_villages":0}
         uz_map[u]["submissions"] += 1
         for k in ["homes","agri","schools","deaths","treated",
-                  "livestock","displaced","flood_villages","rain_villages"]:
+                  "livestock","displaced","sick_men","sick_women",
+                  "flood_villages","rain_villages"]:
             uz_map[u][k] += r[k]
 
     # By Disaster
@@ -256,7 +274,8 @@ def process(results):
          "schools":dsum("schools","des_1","rain"),
          "treated":dsum("treated","des_1","rain"),
          "livestock":dsum("livestock","des_1","rain"),
-         "homes":dsum("homes","des_1","rain")},
+         "homes":dsum("homes","des_1","rain"),
+         "sick_men":0,"sick_women":0},
 
         {"name":"Heatwave","bn":"তাপদাহ","color":"#EA580C",
          "submissions":dc("des_2","heat"),
@@ -265,7 +284,9 @@ def process(results):
          "schools":dsum("schools","des_2","heat"),
          "treated":dsum("treated","des_2","heat"),
          "livestock":dsum("livestock","des_2","heat"),
-         "homes":0},
+         "homes":0,
+         "sick_men":dsum("sick_men","des_2","heat"),
+         "sick_women":dsum("sick_women","des_2","heat")},
 
         {"name":"Cold Wave","bn":"শৈত্যপ্রবাহ","color":"#0891B2",
          "submissions":dc("des_3","cold"),
@@ -274,7 +295,9 @@ def process(results):
          "schools":dsum("schools","des_3","cold"),
          "treated":dsum("treated","des_3","cold"),
          "livestock":dsum("livestock","des_3","cold"),
-         "homes":0},
+         "homes":0,
+         "sick_men":dsum("sick_men","des_3","cold"),
+         "sick_women":dsum("sick_women","des_3","cold")},
 
         {"name":"Drought","bn":"খরা","color":"#B45309",
          "submissions":dc("des_4","drought"),
@@ -283,7 +306,9 @@ def process(results):
          "schools":dsum("schools","des_4","drought"),
          "treated":dsum("treated","des_4","drought"),
          "livestock":dsum("livestock","des_4","drought"),
-         "homes":0},
+         "homes":0,
+         "sick_men":dsum("sick_men","des_4","drought"),
+         "sick_women":dsum("sick_women","des_4","drought")},
 
         {"name":"Flood","bn":"বন্যা","color":"#0D9488",
          "submissions":dc("des_5","flood"),
@@ -292,7 +317,9 @@ def process(results):
          "schools":dsum("schools","des_5","flood"),
          "treated":dsum("treated","des_5","flood"),
          "livestock":0,
-         "homes":dsum("homes","des_5","flood")},
+         "homes":dsum("homes","des_5","flood"),
+         "sick_men":dsum("sick_men","des_5","flood"),
+         "sick_women":dsum("sick_women","des_5","flood")},
     ]
 
     raw_out = [{
@@ -306,6 +333,8 @@ def process(results):
         "treated":    r["treated"],
         "schools":    r["schools"],
         "displaced":  r["displaced"],
+        "sick_men":   r["sick_men"],
+        "sick_women": r["sick_women"],
         "needs":      r["needs"],
         "respondent": r["respondent"],
         "lat":        r["lat"],
