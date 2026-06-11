@@ -111,7 +111,60 @@ body{background:var(--off);color:var(--text);font-family:var(--font);min-height:
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
 
-  <div class="filter-bar">
+  <!-- Gender Breakdown -->
+  <div class="card" style="margin-bottom:20px" id="gender-card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">লিঙ্গভিত্তিক ক্ষতিগ্রস্ত জনসংখ্যা</div>
+        <div class="card-subtitle">Gender-Disaggregated Affected Population (Flood, Heatwave, Cold Wave, Drought)</div>
+      </div>
+      <span class="badge" style="background:#EFF6FF;color:#1D4ED8" id="gender-total-badge">—</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center">
+      <!-- Male -->
+      <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:10px;border:1px solid #BFDBFE">
+        <div style="font-size:32px;margin-bottom:6px">👨</div>
+        <div style="font-size:32px;font-weight:700;color:#1D4ED8" id="gender-men">—</div>
+        <div style="font-size:12px;font-weight:600;color:#1D4ED8;margin-top:2px">পুরুষ</div>
+        <div style="font-size:11px;color:#64748B">Male Affected</div>
+        <div style="font-size:13px;font-weight:600;color:#1D4ED8;margin-top:6px" id="gender-men-pct">—%</div>
+      </div>
+      <!-- Female -->
+      <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#FDF2F8,#FCE7F3);border-radius:10px;border:1px solid #F9A8D4">
+        <div style="font-size:32px;margin-bottom:6px">👩</div>
+        <div style="font-size:32px;font-weight:700;color:#BE185D" id="gender-women">—</div>
+        <div style="font-size:12px;font-weight:600;color:#BE185D;margin-top:2px">মহিলা</div>
+        <div style="font-size:11px;color:#64748B">Female Affected</div>
+        <div style="font-size:13px;font-weight:600;color:#BE185D;margin-top:6px" id="gender-women-pct">—%</div>
+      </div>
+    </div>
+    <!-- Stacked bar -->
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748B;margin-bottom:4px">
+        <span>👨 পুরুষ Male</span><span>মহিলা Female 👩</span>
+      </div>
+      <div style="height:20px;border-radius:10px;overflow:hidden;background:#F1F5F9;display:flex">
+        <div id="gender-bar-men"   style="background:linear-gradient(90deg,#2563EB,#1D4ED8);height:100%;transition:width .6s ease"></div>
+        <div id="gender-bar-women" style="background:linear-gradient(90deg,#EC4899,#BE185D);height:100%;transition:width .6s ease"></div>
+      </div>
+    </div>
+    <!-- Per-disaster gender breakdown -->
+    <div style="margin-top:16px;overflow-x:auto">
+      <table class="dis-table" id="gender-dis-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">দুর্যোগ / Disaster</th>
+            <th>👨 পুরুষ<br><small style="font-weight:400">Male</small></th>
+            <th>👩 মহিলা<br><small style="font-weight:400">Female</small></th>
+            <th>মোট / Total</th>
+            <th>পুরুষ %</th>
+            <th>মহিলা %</th>
+          </tr>
+        </thead>
+        <tbody id="gender-tbody"></tbody>
+      </table>
+    </div>
+  </div>
     <span class="filter-label">উপজেলা:</span>
     <select class="filter-sel" id="uz-select" onchange="setUZ(this.value)">
       <option value="all">সকল উপজেলা — All Upazilas</option>
@@ -126,6 +179,10 @@ body{background:var(--off);color:var(--text);font-family:var(--font);min-height:
       <option value="Drought">খরা — Drought</option>
       <option value="Flood">বন্যা — Flood</option>
     </select>
+    <div class="filter-sep"></div>
+    <span id="filter-status" style="font-size:12px;color:var(--teal);font-weight:600">সকল তথ্য দেখানো হচ্ছে</span>
+    <button onclick="setUZ('all');document.getElementById('uz-select').value='all';setDis('all');document.getElementById('dis-select').value='all';"
+      style="margin-left:auto;font-size:11px;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border2);background:var(--off);color:var(--text2);cursor:pointer;font-family:inherit">✕ রিসেট</button>
   </div>
 
   <div class="sec-head">
@@ -214,6 +271,8 @@ body{background:var(--off);color:var(--text);font-family:var(--font);min-height:
             <th title="ক্ষতিগ্রস্ত কৃষিজমির পরিমাণ (শতক)">কৃষি (শতক)<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Agri Land</small></th>
             <th title="পানিতে ডুবে মৃত্যুর সংখ্যা">মৃত্যু<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Drowning Deaths</small></th>
             <th title="চিকিৎসা গ্রহণকারীর সংখ্যা">চিকিৎসা<br><small style="font-weight:400;text-transform:none;color:#94A3B8">People Treated</small></th>
+            <th title="আক্রান্ত পুরুষের সংখ্যা" style="color:#1D4ED8">👨 পুরুষ<br><small style="font-weight:400;text-transform:none;color:#93C5FD">Male Affected</small></th>
+            <th title="আক্রান্ত মহিলার সংখ্যা" style="color:#BE185D">👩 মহিলা<br><small style="font-weight:400;text-transform:none;color:#F9A8D4">Female Affected</small></th>
             <th title="বন্ধ বিদ্যালয়ের সংখ্যা">বিদ্যালয়<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Schools Closed</small></th>
             <th title="জরুরি প্রয়োজন ও চাহিদা">প্রয়োজন<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Needs</small></th>
             <th title="তথ্য সংগ্রহকারীর নাম">তথ্য সংগ্রহকারী<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Data Collector</small></th>
@@ -263,23 +322,102 @@ const UZ_COORDS = {
   'Rajibpur':[25.549,89.840],
 };
 
-window.onload = () => renderAll(DATA);
-
-function renderAll(d) {
-  renderKPIs(d.kpis);
-  renderUZDropdown(d.upazila);
-  renderBars(d.upazila);
-  renderDisTable(d.disaster);
-  renderDonut(d.disaster);
-  renderGrouped(d.disaster);
-  renderUzChart(d.upazila);
-  renderRaw(d.raw);
-  initMap(d.upazila, d.raw);
-  document.getElementById('update-time').textContent = d.generated || '—';
-  document.getElementById('footer-info').textContent =
-    d.kpis.submissions + ' টি প্রতিবেদন · ' + (d.generated || '—');
+// ── Filter helpers ──────────────────────────────────────────
+function filteredRows() {
+  return DATA.raw.filter(r => {
+    const uzOK  = activeUZ  === 'all' || r.upazila === activeUZ;
+    const disOK = activeDis === 'all' || (r.disaster||'').includes(activeDis);
+    return uzOK && disOK;
+  });
 }
 
+function kpisFromRows(rows) {
+  const sm = k => rows.reduce((s,r) => s+(r[k]||0), 0);
+  return {
+    submissions: rows.length,
+    homes:    sm('homes'),
+    agri:     Math.round(sm('agri')*10)/10,
+    schools:  sm('schools'),
+    deaths:   sm('deaths'),
+    treated:  sm('treated'),
+    livestock:sm('livestock'),
+    displaced:sm('displaced'),
+    sick_men: sm('sick_men'),
+    sick_women:sm('sick_women'),
+  };
+}
+
+function uzFromRows(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const u = r.upazila||'Unknown';
+    if(!map[u]) map[u]={name:u,submissions:0,homes:0,agri:0,schools:0,deaths:0,treated:0,livestock:0,displaced:0,sick_men:0,sick_women:0,flood_villages:0,rain_villages:0};
+    map[u].submissions++;
+    ['homes','agri','schools','deaths','treated','livestock','displaced','sick_men','sick_women','flood_villages','rain_villages'].forEach(k=>map[u][k]+=(r[k]||0));
+  });
+  return Object.values(map);
+}
+
+function disFromRows(rows) {
+  const ALL=[
+    {name:'Rainfall', bn:'অতিবৃষ্টি', color:'#2563EB', hasgender:false},
+    {name:'Heatwave', bn:'তাপদাহ',    color:'#EA580C', hasgender:true},
+    {name:'Cold Wave',bn:'শৈত্যপ্রবাহ',color:'#0891B2',hasgender:true},
+    {name:'Drought',  bn:'খরা',       color:'#B45309', hasgender:true},
+    {name:'Flood',    bn:'বন্যা',      color:'#0D9488', hasgender:true},
+  ];
+  return ALL.map(d => {
+    const sub = rows.filter(r=>(r.disaster||'').includes(d.name));
+    return {...d,
+      submissions:sub.length,
+      homes:   sub.reduce((s,r)=>s+(r.homes||0),0),
+      agri:    Math.round(sub.reduce((s,r)=>s+(r.agri||0),0)*10)/10,
+      schools: sub.reduce((s,r)=>s+(r.schools||0),0),
+      treated: sub.reduce((s,r)=>s+(r.treated||0),0),
+      livestock:sub.reduce((s,r)=>s+(r.livestock||0),0),
+      displaced:sub.reduce((s,r)=>s+(r.displaced||0),0),
+      sick_men: sub.reduce((s,r)=>s+(r.sick_men||0),0),
+      sick_women:sub.reduce((s,r)=>s+(r.sick_women||0),0),
+    };
+  }).filter(d => activeDis==='all' || d.name===activeDis);
+}
+
+// ── Master refresh ──────────────────────────────────────────
+function applyFilters() {
+  const rows    = filteredRows();
+  const kpis    = kpisFromRows(rows);
+  const uzData  = uzFromRows(rows);
+  const disData = disFromRows(rows);
+  const parts=[];
+  if(activeUZ !=='all') parts.push(activeUZ);
+  if(activeDis!=='all') parts.push(activeDis);
+  const statusEl = document.getElementById('filter-status');
+  if(statusEl) statusEl.textContent = parts.length ? 'ফিল্টার: '+parts.join(' · ') : 'সকল তথ্য দেখানো হচ্ছে';
+  renderKPIs(kpis);
+  renderGender(kpis, disData);
+  renderBars(uzData);
+  renderUzChart(uzData);
+  renderDisTable(disData);
+  renderDonut(disData);
+  renderGrouped(disData);
+  renderRaw(rows);
+  initMap(uzData, rows);
+  document.getElementById('footer-info').textContent =
+    rows.length+' টি প্রতিবেদন · '+(DATA.generated||'—');
+}
+
+window.onload = () => {
+  renderUZDropdown(DATA.upazila);
+  document.getElementById('update-time').textContent = DATA.generated||'—';
+  document.getElementById('footer-info').textContent =
+    DATA.kpis.submissions+' টি প্রতিবেদন · '+(DATA.generated||'—');
+  applyFilters();
+};
+
+function setUZ(val)  { activeUZ =val; applyFilters(); }
+function setDis(val) { activeDis=val; applyFilters(); }
+
+// ── Render functions ────────────────────────────────────────
 function renderKPIs(k) {
   document.getElementById('kpi-grid').innerHTML = KPI_CFG.map(c => `
     <div class="kpi">
@@ -291,37 +429,67 @@ function renderKPIs(k) {
     </div>`).join('');
 }
 
+function renderGender(kpis, disData) {
+  const men   = kpis.sick_men   || 0;
+  const women = kpis.sick_women || 0;
+  const total = men + women;
+  const pctM  = total ? Math.round(men/total*100)   : 0;
+  const pctW  = total ? Math.round(women/total*100) : 0;
+  const fmt = n => n.toLocaleString();
+  document.getElementById('gender-men').textContent       = fmt(men);
+  document.getElementById('gender-women').textContent     = fmt(women);
+  document.getElementById('gender-men-pct').textContent   = total ? pctM+'%' : '—';
+  document.getElementById('gender-women-pct').textContent = total ? pctW+'%' : '—';
+  document.getElementById('gender-total-badge').textContent= 'মোট: '+fmt(total);
+  document.getElementById('gender-bar-men').style.width   = (total?pctM:50)+'%';
+  document.getElementById('gender-bar-women').style.width = (total?pctW:50)+'%';
+  // per-disaster table — only show disasters that have gender fields
+  const genderDis = disData.filter(d=>d.hasgender);
+  document.getElementById('gender-tbody').innerHTML = genderDis.map(d => {
+    const t  = (d.sick_men||0)+(d.sick_women||0);
+    const pm = t ? Math.round((d.sick_men||0)/t*100)   : 0;
+    const pw = t ? Math.round((d.sick_women||0)/t*100) : 0;
+    return `<tr>
+      <td><div class="dis-badge"><div class="dis-dot" style="background:${d.color}"></div>
+        <div><span>${d.name}</span><span class="dis-bn">${d.bn}</span></div></div></td>
+      <td style="color:#1D4ED8;font-weight:600">${fmt(d.sick_men||0)}</td>
+      <td style="color:#BE185D;font-weight:600">${fmt(d.sick_women||0)}</td>
+      <td style="font-weight:700">${fmt(t)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:8px;background:#DBEAFE;border-radius:4px;overflow:hidden">
+          <div style="width:${pm}%;height:100%;background:#2563EB;border-radius:4px"></div></div>
+        <span style="font-size:11px;color:#1D4ED8;width:32px">${t?pm+'%':'—'}</span>
+      </div></td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:8px;background:#FCE7F3;border-radius:4px;overflow:hidden">
+          <div style="width:${pw}%;height:100%;background:#BE185D;border-radius:4px"></div></div>
+        <span style="font-size:11px;color:#BE185D;width:32px">${t?pw+'%':'—'}</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
 function renderUZDropdown(uzData) {
   const sel = document.getElementById('uz-select');
-  const cur = sel.value;
   sel.innerHTML = '<option value="all">সকল উপজেলা — All Upazilas</option>' +
-    uzData.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
-  sel.value = cur;
-}
-
-function setUZ(val) {
-  activeUZ = val;
-  const f = val === 'all' ? DATA.upazila : DATA.upazila.filter(u => u.name === val);
-  renderBars(f); renderUzChart(f);
-  renderRaw(val === 'all' ? DATA.raw : DATA.raw.filter(r => r.upazila === val));
-}
-
-function setDis(val) {
-  activeDis = val;
-  const f = val === 'all' ? DATA.disaster : DATA.disaster.filter(d => d.name === val);
-  renderDisTable(f); renderDonut(f); renderGrouped(f);
+    uzData.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
 }
 
 function renderBars(uzData) {
-  const maxH = Math.max(...uzData.map(u => u.homes), 1);
-  const maxA = Math.max(...uzData.map(u => u.agri), 1);
-  document.getElementById('homes-bars').innerHTML = uzData.map(u => `
+  if(!uzData.length){
+    document.getElementById('homes-bars').innerHTML='<div style="color:#94A3B8;font-size:12px;padding:8px">কোনো তথ্য নেই</div>';
+    document.getElementById('agri-bars').innerHTML ='<div style="color:#94A3B8;font-size:12px;padding:8px">কোনো তথ্য নেই</div>';
+    return;
+  }
+  const maxH=Math.max(...uzData.map(u=>u.homes),1);
+  const maxA=Math.max(...uzData.map(u=>u.agri),1);
+  document.getElementById('homes-bars').innerHTML=uzData.map(u=>`
     <div class="bar-item">
       <div class="bar-name">${u.name}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(u.homes/maxH*100)}%;background:linear-gradient(90deg,#EF4444,#DC2626)">${u.homes>30?u.homes:''}</div></div>
       <div class="bar-num">${u.homes}</div>
     </div>`).join('');
-  document.getElementById('agri-bars').innerHTML = uzData.map(u => `
+  document.getElementById('agri-bars').innerHTML=uzData.map(u=>`
     <div class="bar-item">
       <div class="bar-name">${u.name}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(u.agri/maxA*100)}%;background:linear-gradient(90deg,#F59E0B,#D97706)">${u.agri>50?u.agri:''}</div></div>
@@ -330,11 +498,11 @@ function renderBars(uzData) {
 }
 
 function renderDisTable(disData) {
-  document.getElementById('dis-tbody').innerHTML = disData.map(d => `
+  const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
+  document.getElementById('dis-tbody').innerHTML=src.map(d=>`
     <tr>
       <td><div class="dis-badge"><div class="dis-dot" style="background:${d.color}"></div>
-        <div><span>${d.name}</span><span class="dis-bn">${d.bn}</span></div>
-      </div></td>
+        <div><span>${d.name}</span><span class="dis-bn">${d.bn}</span></div></div></td>
       <td><span class="num-pill" style="background:color-mix(in srgb,${d.color} 15%,white);color:${d.color}">${d.submissions}</span></td>
       <td>${d.displaced}</td><td>${d.agri}</td><td>${d.homes}</td>
       <td>${d.schools}</td><td>${d.treated}</td><td>${d.livestock}</td>
@@ -342,25 +510,29 @@ function renderDisTable(disData) {
 }
 
 function renderDonut(disData) {
-  const ctx = document.getElementById('dis-donut').getContext('2d');
+  const ctx=document.getElementById('dis-donut').getContext('2d');
   if(donutChart) donutChart.destroy();
-  donutChart = new Chart(ctx, {
+  const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
+  donutChart=new Chart(ctx,{
     type:'doughnut',
-    data:{labels:disData.map(d=>d.bn),datasets:[{data:disData.map(d=>d.submissions||1),backgroundColor:disData.map(d=>d.color),borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    data:{labels:src.map(d=>d.bn),datasets:[{data:src.map(d=>d.submissions||1),backgroundColor:src.map(d=>d.color),borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},boxWidth:12,padding:12}}}}
   });
 }
 
 function renderGrouped(disData) {
-  const ctx = document.getElementById('dis-grouped').getContext('2d');
+  const ctx=document.getElementById('dis-grouped').getContext('2d');
   if(groupedChart) groupedChart.destroy();
-  groupedChart = new Chart(ctx, {
+  const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
+  groupedChart=new Chart(ctx,{
     type:'bar',
     data:{
-      labels:disData.map(d=>d.bn),
+      labels:src.map(d=>d.bn),
       datasets:[
-        {label:'বিদ্যালয় বন্ধ',data:disData.map(d=>d.schools),backgroundColor:'#7C3AED',borderRadius:4},
-        {label:'চিকিৎসা',data:disData.map(d=>d.treated),backgroundColor:'#059669',borderRadius:4},
+        {label:'বিদ্যালয় বন্ধ', data:src.map(d=>d.schools),  backgroundColor:'#7C3AED',borderRadius:4},
+        {label:'চিকিৎসা',        data:src.map(d=>d.treated),  backgroundColor:'#059669',borderRadius:4},
+        {label:'👨 পুরুষ আক্রান্ত',data:src.map(d=>d.sick_men||0), backgroundColor:'#2563EB',borderRadius:4},
+        {label:'👩 মহিলা আক্রান্ত',data:src.map(d=>d.sick_women||0),backgroundColor:'#EC4899',borderRadius:4},
       ]
     },
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:10},boxWidth:10}}},scales:{x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}}}}
@@ -368,16 +540,16 @@ function renderGrouped(disData) {
 }
 
 function renderUzChart(uzData) {
-  const ctx = document.getElementById('uz-chart').getContext('2d');
+  const ctx=document.getElementById('uz-chart').getContext('2d');
   if(uzChart) uzChart.destroy();
-  uzChart = new Chart(ctx, {
+  uzChart=new Chart(ctx,{
     type:'bar',
     data:{
       labels:uzData.map(u=>u.name),
       datasets:[
-        {label:'বাড়িঘর / Homes',data:uzData.map(u=>u.homes),backgroundColor:'#EF4444',borderRadius:4},
-        {label:'কৃষিজমি / Agri',data:uzData.map(u=>u.agri),backgroundColor:'#F59E0B',borderRadius:4},
-        {label:'চিকিৎসা / Treated',data:uzData.map(u=>u.treated),backgroundColor:'#10B981',borderRadius:4},
+        {label:'বাড়িঘর / Homes',    data:uzData.map(u=>u.homes),    backgroundColor:'#EF4444',borderRadius:4},
+        {label:'কৃষিজমি / Agri',    data:uzData.map(u=>u.agri),     backgroundColor:'#F59E0B',borderRadius:4},
+        {label:'চিকিৎসা / Treated', data:uzData.map(u=>u.treated),  backgroundColor:'#10B981',borderRadius:4},
         {label:'পশু মৃত্যু / Livestock',data:uzData.map(u=>u.livestock),backgroundColor:'#8B5CF6',borderRadius:4},
       ]
     },
@@ -475,6 +647,8 @@ function renderRaw(rows) {
       <td style="color:${r.agri>0?'#D97706':'#94A3B8'};font-weight:${r.agri>0?600:400}">${r.agri}</td>
       <td style="color:${r.deaths>0?'#DC2626':'#94A3B8'};font-weight:${r.deaths>0?600:400}">${r.deaths}</td>
       <td style="color:${r.treated>0?'#059669':'#94A3B8'}">${r.treated}</td>
+      <td style="color:${(r.sick_men||0)>0?'#1D4ED8':'#94A3B8'};font-weight:${(r.sick_men||0)>0?600:400}">${r.sick_men||0}</td>
+      <td style="color:${(r.sick_women||0)>0?'#BE185D':'#94A3B8'};font-weight:${(r.sick_women||0)>0?600:400}">${r.sick_women||0}</td>
       <td>${r.schools}</td>
       <td style="color:#64748B;font-size:11px">${r.needs||'—'}</td>
       <td style="color:#475569;font-size:11px;font-weight:500">${r.respondent||'—'}</td>
