@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- xlsx for export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --navy:#0A1628;--navy2:#0D1F3C;--navy3:#152848;
@@ -23,65 +25,76 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--off);color:var(--text);font-family:var(--font);min-height:100vh}
 .topbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy3) 50%,#1a3a6e 100%);padding:0;border-bottom:3px solid var(--teal2);position:sticky;top:0;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.3)}
-.topbar-inner{max-width:1400px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
-.topbar-logo{width:52px;height:52px;border-radius:50%;overflow:hidden;background:white;border:2px solid rgba(255,255,255,.3);flex-shrink:0}
+.topbar-inner{max-width:1400px;margin:0 auto;padding:8px 20px;display:flex;align-items:center;gap:12px}
+.topbar-logo{width:44px;height:44px;border-radius:50%;overflow:hidden;background:white;border:2px solid rgba(255,255,255,.3);flex-shrink:0}
 .topbar-logo img{width:100%;height:100%;object-fit:cover}
 .topbar-text{flex:1}
-.topbar-title-bn{font-size:17px;font-weight:700;color:var(--white);line-height:1.2}
-.topbar-title-en{font-size:11px;color:var(--teal3);margin-top:2px;letter-spacing:.03em}
+.topbar-title-bn{font-size:15px;font-weight:700;color:var(--white);line-height:1.2}
+.topbar-title-en{font-size:10px;color:var(--teal3);margin-top:1px;letter-spacing:.03em}
 .topbar-right{margin-left:auto;text-align:right;flex-shrink:0}
 .update-label{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em}
 .update-val{font-size:12px;color:var(--teal3);font-weight:500}
-.main{max-width:1400px;margin:0 auto;padding:20px 24px}
-.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:4px}
+.main{max-width:1400px;margin:0 auto;padding:14px 20px}
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:2px}
 .sec-head-line{flex:1;height:2px;background:linear-gradient(90deg,var(--teal2),transparent)}
-.sec-title{font-size:13px;font-weight:600;color:var(--navy3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
-.sec-title-bn{font-size:12px;color:var(--text2);font-weight:400;margin-left:4px}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
-.kpi{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden;border:1px solid var(--border);transition:transform .2s,box-shadow .2s}
-.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
-.kpi-accent{position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--radius) var(--radius) 0 0}
-.kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px}
-.kpi-val{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
-.kpi-en{font-size:11px;color:var(--text2);font-weight:500}
-.kpi-bn{font-size:11px;color:var(--text3);margin-top:1px}
-.filter-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)}
-.filter-label{font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap}
-.filter-sel{font-size:13px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--off);color:var(--text);cursor:pointer;min-width:190px;font-family:inherit}
+.sec-title{font-size:12px;font-weight:600;color:var(--navy3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.sec-title-bn{font-size:11px;color:var(--text2);font-weight:400;margin-left:4px}
+/* Compact KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.kpi{background:var(--white);border-radius:var(--radius-sm);padding:11px 12px;box-shadow:var(--shadow);position:relative;overflow:hidden;border:1px solid var(--border)}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;line-height:1;margin-bottom:2px}
+.kpi-en{font-size:10px;color:var(--text2);font-weight:500}
+.kpi-bn{font-size:10px;color:var(--text3);margin-top:1px}
+/* Gender card compact */
+.gender-wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start;margin-bottom:10px}
+@media(max-width:700px){.gender-wrap{grid-template-columns:1fr 1fr}}
+.gender-box{text-align:center;padding:12px 8px;border-radius:10px;border:1px solid}
+/* Filter */
+.filter-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.filter-label{font-size:11px;color:var(--text2);font-weight:600;white-space:nowrap}
+.filter-sel{font-size:12px;padding:5px 10px;border-radius:6px;border:1.5px solid var(--border2);background:var(--off);color:var(--text);cursor:pointer;font-family:inherit}
 .filter-sel:focus{outline:none;border-color:var(--teal)}
-.filter-sep{width:1.5px;height:22px;background:var(--border2)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-@media(max-width:800px){.grid-2{grid-template-columns:1fr}}
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
-.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
-.card-title{font-size:13px;font-weight:600;color:var(--navy3)}
-.card-subtitle{font-size:11px;color:var(--text3);margin-top:2px}
-.badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500;white-space:nowrap}
-.chart-wrap{position:relative;width:100%;height:220px}
-.chart-wrap-lg{height:260px}
-.bar-item{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.bar-name{font-size:12px;color:var(--text2);width:140px;text-align:right;flex-shrink:0;font-weight:500;line-height:1.3}
-.bar-track{flex:1;height:18px;background:#F1F5F9;border-radius:4px;overflow:hidden;border:1px solid var(--border)}
-.bar-fill{height:100%;border-radius:3px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-size:10px;color:rgba(255,255,255,.9);font-weight:600}
-.bar-num{font-size:12px;color:var(--text);width:50px;text-align:right;font-weight:600}
+.filter-sep{width:1px;height:20px;background:var(--border2);flex-shrink:0}
+.btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border2);background:var(--off);color:var(--text2);cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:hover{background:var(--border);color:var(--text)}
+.btn-export{background:#0D9488;color:white;border-color:#0D9488}
+.btn-export:hover{background:#0b7d73}
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:800px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.card-title{font-size:12px;font-weight:600;color:var(--navy3)}
+.card-subtitle{font-size:10px;color:var(--text3);margin-top:1px}
+.badge{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:500;white-space:nowrap}
+.chart-wrap{position:relative;width:100%;height:200px}
+.chart-wrap-lg{height:230px}
+.bar-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-name{font-size:11px;color:var(--text2);width:120px;text-align:right;flex-shrink:0;font-weight:500;line-height:1.3}
+.bar-track{flex:1;height:16px;background:#F1F5F9;border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10px;color:rgba(255,255,255,.9);font-weight:600}
+.bar-num{font-size:11px;color:var(--text);width:44px;text-align:right;font-weight:600}
 .dis-table{width:100%;border-collapse:collapse}
-.dis-table th{font-size:11px;color:var(--text3);font-weight:600;text-align:center;padding:8px 10px;border-bottom:2px solid var(--border);text-transform:uppercase;letter-spacing:.04em;background:var(--off)}
+.dis-table th{font-size:10px;color:var(--text3);font-weight:600;text-align:center;padding:6px 8px;border-bottom:2px solid var(--border);text-transform:uppercase;letter-spacing:.04em;background:var(--off)}
 .dis-table th:first-child{text-align:left}
-.dis-table td{font-size:12px;color:var(--text);text-align:center;padding:10px;border-bottom:1px solid var(--border)}
+.dis-table td{font-size:11px;color:var(--text);text-align:center;padding:8px;border-bottom:1px solid var(--border)}
 .dis-table td:first-child{text-align:left}
 .dis-table tr:hover td{background:#F8FAFC}
-.dis-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
-.dis-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dis-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600}
+.dis-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .dis-bn{font-size:10px;color:var(--text3);font-weight:400;display:block}
-.num-pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600}
+.num-pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600}
 .raw-wrap{overflow-x:auto}
-.raw-table{width:100%;border-collapse:collapse;min-width:750px}
-.raw-table th{font-size:11px;color:var(--text3);font-weight:600;text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);background:var(--off);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
-.raw-table td{font-size:12px;color:var(--text2);padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.raw-table{width:100%;border-collapse:collapse;min-width:800px}
+.raw-table th{font-size:10px;color:var(--text3);font-weight:600;text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);background:var(--off);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.raw-table td{font-size:11px;color:var(--text2);padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
 .raw-table tr:hover td{background:#F8FAFC;color:var(--text)}
-.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:500}
-.footer{background:linear-gradient(135deg,var(--navy),var(--navy3));margin-top:32px;padding:16px 24px;border-top:3px solid var(--teal2)}
-.footer-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:500}
+.footer{background:linear-gradient(135deg,var(--navy),var(--navy3));margin-top:20px;padding:12px 20px;border-top:3px solid var(--teal2)}
+.footer-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
 .footer-left{font-size:11px;color:rgba(255,255,255,.6)}
 .footer-left strong{color:var(--teal3)}
 .footer-right{font-size:11px;color:rgba(255,255,255,.5)}
@@ -105,91 +118,81 @@ body{background:var(--off);color:var(--text);font-family:var(--font);min-height:
 
 <div class="main">
 
+  <!-- KPI Section -->
   <div class="sec-head">
     <div class="sec-title">মূল সূচক <span class="sec-title-bn">Key Impact Indicators</span></div>
     <div class="sec-head-line"></div>
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
 
-  <!-- Gender Breakdown -->
-  <div class="card" style="margin-bottom:20px" id="gender-card">
+  <!-- Gender Card -->
+  <div class="card" style="margin-bottom:12px">
     <div class="card-head">
-      <div>
-        <div class="card-title">লিঙ্গভিত্তিক ক্ষতিগ্রস্ত জনসংখ্যা</div>
-        <div class="card-subtitle">Gender-Disaggregated Affected Population (Flood, Heatwave, Cold Wave, Drought)</div>
-      </div>
-      <span class="badge" style="background:#EFF6FF;color:#1D4ED8" id="gender-total-badge">—</span>
+      <div><div class="card-title">লিঙ্গভিত্তিক ক্ষতিগ্রস্ত জনসংখ্যা</div>
+      <div class="card-subtitle">Gender-Disaggregated Affected Population (Flood · Heatwave · Cold Wave · Drought)</div></div>
+      <span class="badge" style="background:#EFF6FF;color:#1D4ED8" id="gender-total-badge">মোট: —</span>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center">
-      <!-- Male -->
-      <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:10px;border:1px solid #BFDBFE">
-        <div style="font-size:32px;margin-bottom:6px">👨</div>
-        <div style="font-size:32px;font-weight:700;color:#1D4ED8" id="gender-men">—</div>
-        <div style="font-size:12px;font-weight:600;color:#1D4ED8;margin-top:2px">পুরুষ</div>
-        <div style="font-size:11px;color:#64748B">Male Affected</div>
-        <div style="font-size:13px;font-weight:600;color:#1D4ED8;margin-top:6px" id="gender-men-pct">—%</div>
+    <div class="gender-wrap">
+      <div class="gender-box" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-color:#BFDBFE">
+        <div style="font-size:26px;margin-bottom:4px">👨</div>
+        <div style="font-size:26px;font-weight:700;color:#1D4ED8" id="gender-men">—</div>
+        <div style="font-size:11px;font-weight:600;color:#1D4ED8">পুরুষ / Male</div>
+        <div style="font-size:13px;font-weight:700;color:#1D4ED8;margin-top:4px" id="gender-men-pct">—</div>
       </div>
-      <!-- Female -->
-      <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#FDF2F8,#FCE7F3);border-radius:10px;border:1px solid #F9A8D4">
-        <div style="font-size:32px;margin-bottom:6px">👩</div>
-        <div style="font-size:32px;font-weight:700;color:#BE185D" id="gender-women">—</div>
-        <div style="font-size:12px;font-weight:600;color:#BE185D;margin-top:2px">মহিলা</div>
-        <div style="font-size:11px;color:#64748B">Female Affected</div>
-        <div style="font-size:13px;font-weight:600;color:#BE185D;margin-top:6px" id="gender-women-pct">—%</div>
+      <div class="gender-box" style="background:linear-gradient(135deg,#FDF2F8,#FCE7F3);border-color:#F9A8D4">
+        <div style="font-size:26px;margin-bottom:4px">👩</div>
+        <div style="font-size:26px;font-weight:700;color:#BE185D" id="gender-women">—</div>
+        <div style="font-size:11px;font-weight:600;color:#BE185D">মহিলা / Female</div>
+        <div style="font-size:13px;font-weight:700;color:#BE185D;margin-top:4px" id="gender-women-pct">—</div>
       </div>
-    </div>
-    <!-- Stacked bar -->
-    <div style="margin-top:16px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748B;margin-bottom:4px">
-        <span>👨 পুরুষ Male</span><span>মহিলা Female 👩</span>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:8px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#64748B;margin-bottom:3px"><span>👨 পুরুষ</span><span>মহিলা 👩</span></div>
+          <div style="height:16px;border-radius:8px;overflow:hidden;background:#F1F5F9;display:flex">
+            <div id="gender-bar-men" style="background:linear-gradient(90deg,#2563EB,#1D4ED8);height:100%;transition:width .6s"></div>
+            <div id="gender-bar-women" style="background:linear-gradient(90deg,#EC4899,#BE185D);height:100%;transition:width .6s"></div>
+          </div>
+        </div>
+        <div id="gender-dis-mini" style="font-size:10px;color:#64748B;line-height:1.8"></div>
       </div>
-      <div style="height:20px;border-radius:10px;overflow:hidden;background:#F1F5F9;display:flex">
-        <div id="gender-bar-men"   style="background:linear-gradient(90deg,#2563EB,#1D4ED8);height:100%;transition:width .6s ease"></div>
-        <div id="gender-bar-women" style="background:linear-gradient(90deg,#EC4899,#BE185D);height:100%;transition:width .6s ease"></div>
-      </div>
-    </div>
-    <!-- Per-disaster gender breakdown -->
-    <div style="margin-top:16px;overflow-x:auto">
-      <table class="dis-table" id="gender-dis-table">
-        <thead>
-          <tr>
-            <th style="text-align:left">দুর্যোগ / Disaster</th>
-            <th>👨 পুরুষ<br><small style="font-weight:400">Male</small></th>
-            <th>👩 মহিলা<br><small style="font-weight:400">Female</small></th>
-            <th>মোট / Total</th>
-            <th>পুরুষ %</th>
-            <th>মহিলা %</th>
-          </tr>
-        </thead>
-        <tbody id="gender-tbody"></tbody>
-      </table>
     </div>
   </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
     <span class="filter-label">উপজেলা:</span>
     <select class="filter-sel" id="uz-select" onchange="setUZ(this.value)">
-      <option value="all">সকল উপজেলা — All Upazilas</option>
+      <option value="all">সকল উপজেলা — All</option>
     </select>
     <div class="filter-sep"></div>
     <span class="filter-label">দুর্যোগ:</span>
     <select class="filter-sel" id="dis-select" onchange="setDis(this.value)">
-      <option value="all">সকল দুর্যোগ — All Disasters</option>
+      <option value="all">সকল দুর্যোগ — All</option>
       <option value="Rainfall">অতিবৃষ্টি — Rainfall</option>
       <option value="Heatwave">তাপদাহ — Heatwave</option>
       <option value="Cold Wave">শৈত্যপ্রবাহ — Cold Wave</option>
       <option value="Drought">খরা — Drought</option>
       <option value="Flood">বন্যা — Flood</option>
+
     </select>
     <div class="filter-sep"></div>
-    <span id="filter-status" style="font-size:12px;color:var(--teal);font-weight:600">সকল তথ্য দেখানো হচ্ছে</span>
-    <button onclick="setUZ('all');document.getElementById('uz-select').value='all';setDis('all');document.getElementById('dis-select').value='all';"
-      style="margin-left:auto;font-size:11px;padding:5px 12px;border-radius:6px;border:1.5px solid var(--border2);background:var(--off);color:var(--text2);cursor:pointer;font-family:inherit">✕ রিসেট</button>
+    <span class="filter-label">তারিখ:</span>
+    <input type="date" id="date-from" class="filter-sel" style="min-width:130px" onchange="applyFilters()" title="From date">
+    <span style="font-size:11px;color:#94A3B8">—</span>
+    <input type="date" id="date-to" class="filter-sel" style="min-width:130px" onchange="applyFilters()" title="To date">
+    <div class="filter-sep"></div>
+    <span id="filter-status" style="font-size:11px;color:var(--teal);font-weight:600">সকল তথ্য</span>
+    <button class="btn" onclick="resetFilters()">✕ রিসেট</button>
+    <button class="btn btn-export" onclick="exportExcel()" title="Export filtered data to Excel">⬇ Excel</button>
+    <button class="btn btn-export" style="background:#DC2626;border-color:#DC2626" onclick="exportPDF()" title="Print / Save as PDF">🖨 PDF</button>
   </div>
 
+  <!-- Upazila Section -->
   <div class="sec-head">
     <div class="sec-title">উপজেলা ভিত্তিক প্রভাব <span class="sec-title-bn">Impact by Upazila</span></div>
     <div class="sec-head-line"></div>
   </div>
-  <div class="grid-2">
+  <div class="grid-2" style="margin-bottom:12px">
     <div class="card">
       <div class="card-head">
         <div><div class="card-title">ক্ষতিগ্রস্ত বাড়িঘর</div><div class="card-subtitle">Homes Damaged by Upazila</div></div>
@@ -199,83 +202,100 @@ body{background:var(--off);color:var(--text);font-family:var(--font);min-height:
     </div>
     <div class="card">
       <div class="card-head">
-        <div><div class="card-title">ক্ষতিগ্রস্ত কৃষিজমি (শতক)</div><div class="card-subtitle">Agricultural Land Affected (Shotok)</div></div>
+        <div><div class="card-title">ক্ষতিগ্রস্ত কৃষিজমি (শতক)</div><div class="card-subtitle">Agricultural Land Affected</div></div>
         <span class="badge" style="background:#FEF3C7;color:#D97706">কৃষি</span>
       </div>
       <div id="agri-bars"></div>
     </div>
   </div>
 
-  <div class="card" style="margin-bottom:20px">
+  <!-- Upazila gender bars -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head">
+      <div><div class="card-title">উপজেলাভিত্তিক লিঙ্গ বিশ্লেষণ</div><div class="card-subtitle">Gender Breakdown by Upazila — Affected People</div></div>
+    </div>
+    <div id="uz-gender-bars"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <div class="card-head">
       <div><div class="card-title">উপজেলা তুলনামূলক বিশ্লেষণ</div><div class="card-subtitle">Upazila Comparison — All Metrics</div></div>
     </div>
     <div class="chart-wrap chart-wrap-lg"><canvas id="uz-chart"></canvas></div>
   </div>
 
+  <!-- Disaster Analysis -->
   <div class="sec-head">
     <div class="sec-title">দুর্যোগের ধরন বিশ্লেষণ <span class="sec-title-bn">Disaster Type Analysis</span></div>
     <div class="sec-head-line"></div>
   </div>
-  <div class="grid-2">
+  <div class="grid-2" style="margin-bottom:12px">
     <div class="card">
-      <div class="card-head"><div><div class="card-title">দুর্যোগের ধরন অনুযায়ী প্রতিবেদন</div><div class="card-subtitle">Submissions by Disaster Type</div></div></div>
+      <div class="card-head"><div><div class="card-title">দুর্যোগ অনুযায়ী প্রতিবেদন</div><div class="card-subtitle">Submissions by Disaster Type</div></div></div>
       <div class="chart-wrap"><canvas id="dis-donut"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-head"><div><div class="card-title">বিদ্যালয় বন্ধ ও চিকিৎসা গ্রহণ</div><div class="card-subtitle">Schools Closed & People Treated</div></div></div>
+      <div class="card-head"><div><div class="card-title">আক্রান্ত ও চিকিৎসা — দুর্যোগভিত্তিক</div><div class="card-subtitle">Gender Affected & Treated by Disaster</div></div></div>
       <div class="chart-wrap"><canvas id="dis-grouped"></canvas></div>
     </div>
   </div>
 
+  <!-- Disaster Summary Table -->
   <div class="sec-head">
     <div class="sec-title">দুর্যোগ সারসংক্ষেপ <span class="sec-title-bn">Disaster Breakdown Summary</span></div>
     <div class="sec-head-line"></div>
   </div>
-  <div class="card" style="margin-bottom:20px">
+  <div class="card" style="margin-bottom:12px;overflow-x:auto">
     <table class="dis-table">
       <thead>
         <tr>
-          <th>দুর্যোগ / Disaster</th>
+          <th style="text-align:left">দুর্যোগ / Disaster</th>
           <th>প্রতিবেদন</th><th>বাস্তুচ্যুত</th><th>কৃষিজমি</th>
           <th>বাড়িঘর</th><th>বিদ্যালয়</th><th>চিকিৎসা</th><th>পশু মৃত্যু</th>
+          <th title="আক্রান্ত পুরুষ">👨পুরুষ</th><th title="আক্রান্ত মহিলা">👩মহিলা</th>
+          <th title="বজ্রপাত ও ঝড়ের রিপোর্ট সংখ্যা">⚡বজ্রপাত</th>
         </tr>
       </thead>
       <tbody id="dis-tbody"></tbody>
     </table>
   </div>
 
+  <!-- Map -->
   <div class="sec-head">
-    <div class="sec-title">দুর্যোগের অবস্থান <span class="sec-title-bn">Submission Locations — Kurigram District</span></div>
+    <div class="sec-title">দুর্যোগের অবস্থান <span class="sec-title-bn">Submission Locations</span></div>
     <div class="sec-head-line"></div>
   </div>
-  <div class="card" style="margin-bottom:20px">
-    <div id="map" style="width:100%;height:380px;border-radius:8px;overflow:hidden"></div>
-    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px" id="map-legend"></div>
+  <div class="card" style="margin-bottom:12px">
+    <div id="map" style="width:100%;height:340px;border-radius:8px;overflow:hidden"></div>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px" id="map-legend"></div>
   </div>
 
+  <!-- All Submissions -->
   <div class="sec-head">
     <div class="sec-title">সকল প্রতিবেদন <span class="sec-title-bn">All Submissions</span></div>
     <div class="sec-head-line"></div>
+    <span id="row-count" style="font-size:11px;color:var(--text3);white-space:nowrap"></span>
   </div>
-  <div class="card" style="margin-bottom:20px">
+  <div class="card" style="margin-bottom:12px">
     <div class="raw-wrap">
-      <table class="raw-table">
+      <table class="raw-table" id="raw-table">
         <thead>
           <tr>
-            <th title="তথ্য সংগ্রহের তারিখ">তারিখ<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Date</small></th>
-            <th title="উপজেলার নাম">উপজেলা<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Upazila</small></th>
-            <th title="ইউনিয়ন পরিষদের নাম">ইউনিয়ন<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Union</small></th>
-            <th title="দুর্যোগের ধরন">দুর্যোগ<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Disaster Type</small></th>
-            <th title="ক্ষতিগ্রস্ত বাড়িঘরের সংখ্যা">বাড়ি<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Homes Damaged</small></th>
-            <th title="ক্ষতিগ্রস্ত কৃষিজমির পরিমাণ (শতক)">কৃষি (শতক)<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Agri Land</small></th>
-            <th title="পানিতে ডুবে মৃত্যুর সংখ্যা">মৃত্যু<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Drowning Deaths</small></th>
-            <th title="চিকিৎসা গ্রহণকারীর সংখ্যা">চিকিৎসা<br><small style="font-weight:400;text-transform:none;color:#94A3B8">People Treated</small></th>
-            <th title="আক্রান্ত পুরুষের সংখ্যা" style="color:#1D4ED8">👨 পুরুষ<br><small style="font-weight:400;text-transform:none;color:#93C5FD">Male Affected</small></th>
-            <th title="আক্রান্ত মহিলার সংখ্যা" style="color:#BE185D">👩 মহিলা<br><small style="font-weight:400;text-transform:none;color:#F9A8D4">Female Affected</small></th>
-            <th title="বন্ধ বিদ্যালয়ের সংখ্যা">বিদ্যালয়<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Schools Closed</small></th>
-            <th title="জরুরি প্রয়োজন ও চাহিদা">প্রয়োজন<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Needs</small></th>
-            <th title="তথ্য সংগ্রহকারীর নাম">তথ্য সংগ্রহকারী<br><small style="font-weight:400;text-transform:none;color:#94A3B8">Data Collector</small></th>
+            <th title="তথ্য সংগ্রহের তারিখ">তারিখ<br><small style="font-weight:400;color:#94A3B8">Date</small></th>
+            <th title="উপজেলার নাম">উপজেলা<br><small style="font-weight:400;color:#94A3B8">Upazila</small></th>
+            <th title="ইউনিয়ন পরিষদ">ইউনিয়ন<br><small style="font-weight:400;color:#94A3B8">Union</small></th>
+            <th title="দুর্যোগের ধরন">দুর্যোগ<br><small style="font-weight:400;color:#94A3B8">Disaster</small></th>
+            <th title="ক্ষতিগ্রস্ত বাড়িঘর">বাড়ি<br><small style="font-weight:400;color:#94A3B8">Homes</small></th>
+            <th title="কৃষিজমি (শতক)">কৃষি(শতক)<br><small style="font-weight:400;color:#94A3B8">Agri</small></th>
+            <th title="পানিতে মৃত্যু">মৃত্যু<br><small style="font-weight:400;color:#94A3B8">Deaths</small></th>
+            <th title="চিকিৎসা গ্রহণ">চিকিৎসা<br><small style="font-weight:400;color:#94A3B8">Treated</small></th>
+            <th title="আক্রান্ত পুরুষ" style="color:#1D4ED8">👨পুরুষ<br><small style="font-weight:400;color:#93C5FD">Male</small></th>
+            <th title="আক্রান্ত মহিলা" style="color:#BE185D">👩মহিলা<br><small style="font-weight:400;color:#F9A8D4">Female</small></th>
+            <th title="বজ্রঝড় ক্ষতি (ঘর)">⚡বজ্রঝড়<br><small style="font-weight:400;color:#94A3B8">T-Storm</small></th>
+            <th title="বৃষ্টিঝড় ক্ষতি (ঘর)">🌧বৃষ্টিঝড়<br><small style="font-weight:400;color:#94A3B8">R-Storm</small></th>
+            <th title="বন্ধ বিদ্যালয়">বিদ্যালয়<br><small style="font-weight:400;color:#94A3B8">Schools</small></th>
+            <th title="জরুরি প্রয়োজন">প্রয়োজন<br><small style="font-weight:400;color:#94A3B8">Needs</small></th>
+            <th title="তথ্য সংগ্রহকারী">তথ্য সংগ্রহকারী<br><small style="font-weight:400;color:#94A3B8">Data Collector</small></th>
           </tr>
         </thead>
         <tbody id="raw-tbody"></tbody>
@@ -293,7 +313,7 @@ body{background:var(--off);color:var(--text);font-family:var(--font);min-height:
 </div>
 
 <script>
-const EMBEDDED = {"kpis": {"submissions": 39, "homes": 1144, "agri": 5339.0, "schools": 120, "deaths": 100, "treated": 671, "livestock": 87, "displaced": 10730}, "upazila": [{"name": "Kurigram Sadar", "submissions": 5, "homes": 47, "agri": 267, "schools": 0, "deaths": 0, "treated": 40, "livestock": 0, "displaced": 0, "flood_villages": 0, "rain_villages": 0}, {"name": "Ulipur", "submissions": 5, "homes": 30, "agri": 62, "schools": 0, "deaths": 0, "treated": 14, "livestock": 0, "displaced": 100, "flood_villages": 0, "rain_villages": 0}, {"name": "Nageshwari", "submissions": 15, "homes": 870, "agri": 3500, "schools": 80, "deaths": 100, "treated": 450, "livestock": 50, "displaced": 5000, "flood_villages": 10, "rain_villages": 5}, {"name": "Rowmari", "submissions": 7, "homes": 150, "agri": 1200, "schools": 20, "deaths": 0, "treated": 120, "livestock": 20, "displaced": 3000, "flood_villages": 5, "rain_villages": 2}, {"name": "Bhurungamari", "submissions": 4, "homes": 30, "agri": 200, "schools": 10, "deaths": 0, "treated": 30, "livestock": 10, "displaced": 500, "flood_villages": 2, "rain_villages": 1}, {"name": "Chilmari", "submissions": 2, "homes": 12, "agri": 80, "schools": 5, "deaths": 0, "treated": 12, "livestock": 5, "displaced": 80, "flood_villages": 1, "rain_villages": 0}, {"name": "Rajibpur", "submissions": 1, "homes": 5, "agri": 30, "schools": 5, "deaths": 0, "treated": 5, "livestock": 2, "displaced": 50, "flood_villages": 1, "rain_villages": 0}], "disaster": [{"name": "Rainfall", "bn": "অতিবৃষ্টি", "color": "#2563EB", "submissions": 8, "displaced": 2000, "agri": 800, "schools": 10, "treated": 50, "livestock": 10, "homes": 150}, {"name": "Heatwave", "bn": "তাপদাহ", "color": "#EA580C", "submissions": 6, "displaced": 1500, "agri": 500, "schools": 30, "treated": 120, "livestock": 20, "homes": 0}, {"name": "Cold Wave", "bn": "শৈত্যপ্রবাহ", "color": "#0891B2", "submissions": 4, "displaced": 500, "agri": 300, "schools": 15, "treated": 80, "livestock": 15, "homes": 0}, {"name": "Drought", "bn": "খরা", "color": "#B45309", "submissions": 5, "displaced": 1500, "agri": 1200, "schools": 25, "treated": 90, "livestock": 20, "homes": 0}, {"name": "Flood", "bn": "বন্যা", "color": "#0D9488", "submissions": 16, "displaced": 5230, "agri": 2539, "schools": 40, "treated": 331, "livestock": 22, "homes": 994}], "raw": [{"date": "2026-05-26", "upazila": "Nageshwari", "union": "নুনখাওয়া", "disaster": "Flood", "homes": 400, "agri": 250, "deaths": 100, "treated": 250, "schools": 8, "displaced": 5000, "needs": "Boat, ORS", "respondent": "Md. Rafiqul Islam", "lat": 26.002, "lon": 89.894}, {"date": "2026-05-26", "upazila": "Rowmari", "union": "যদুরচর", "disaster": "Flood", "homes": 50, "agri": 200, "deaths": 0, "treated": 20, "schools": 5, "displaced": 1000, "needs": "Dry food", "respondent": "Fatema Begum", "lat": 25.549, "lon": 89.757}, {"date": "2026-05-26", "upazila": "Kurigram Sadar", "union": "ঘোগাদহ", "disaster": "Flood", "homes": 20, "agri": 100, "deaths": 0, "treated": 20, "schools": 0, "displaced": 500, "needs": "Clean water", "respondent": "Abul Kalam", "lat": 25.807, "lon": 89.636}, {"date": "2026-05-26", "upazila": "Ulipur", "union": "হাতিয়া", "disaster": "Rainfall", "homes": 30, "agri": 90, "deaths": 0, "treated": 10, "schools": 5, "displaced": 300, "needs": "Food", "respondent": "Nasrin Akter", "lat": 25.673, "lon": 89.508}, {"date": "2026-05-26", "upazila": "Nageshwari", "union": "বেরুবাড়ী", "disaster": "Flood, Drought", "homes": 0, "agri": 120, "deaths": 0, "treated": 20, "schools": 10, "displaced": 500, "needs": "Tarpaulin", "respondent": "Md. Jahangir Alam", "lat": 26.002, "lon": 89.9}, {"date": "2026-05-26", "upazila": "Bhurungamari", "union": "শিলকূড়ী", "disaster": "Heatwave", "homes": 0, "agri": 200, "deaths": 0, "treated": 30, "schools": 10, "displaced": 500, "needs": "Medicine", "respondent": "Roksana Khatun", "lat": 26.114, "lon": 89.718}], "generated": "2026-06-01 12:00"};
+const EMBEDDED = {"kpis": {"submissions": 14, "homes": 120, "agri": 850.0, "schools": 18, "deaths": 2, "treated": 45, "livestock": 8, "displaced": 1200, "sick_men": 28, "sick_women": 19, "tstorm": 0, "rstorm": 0}, "upazila": [{"name": "Kurigram Sadar", "submissions": 3, "homes": 15, "agri": 80, "schools": 2, "deaths": 0, "treated": 8, "livestock": 0, "displaced": 100, "sick_men": 4, "sick_women": 2, "tstorm": 0, "rstorm": 0, "flood_villages": 0, "rain_villages": 0}, {"name": "Ulipur", "submissions": 2, "homes": 10, "agri": 40, "schools": 1, "deaths": 0, "treated": 5, "livestock": 1, "displaced": 80, "sick_men": 3, "sick_women": 2, "tstorm": 0, "rstorm": 0, "flood_villages": 0, "rain_villages": 0}, {"name": "Nageshwari", "submissions": 4, "homes": 60, "agri": 400, "schools": 8, "deaths": 2, "treated": 18, "livestock": 4, "displaced": 500, "sick_men": 12, "sick_women": 9, "tstorm": 0, "rstorm": 0, "flood_villages": 2, "rain_villages": 1}, {"name": "Bhurungamari", "submissions": 2, "homes": 20, "agri": 200, "schools": 4, "deaths": 0, "treated": 8, "livestock": 2, "displaced": 300, "sick_men": 6, "sick_women": 4, "tstorm": 0, "rstorm": 0, "flood_villages": 0, "rain_villages": 0}, {"name": "Rowmari", "submissions": 2, "homes": 12, "agri": 100, "schools": 2, "deaths": 0, "treated": 5, "livestock": 1, "displaced": 180, "sick_men": 3, "sick_women": 2, "tstorm": 0, "rstorm": 0, "flood_villages": 1, "rain_villages": 0}, {"name": "Chilmari", "submissions": 1, "homes": 3, "agri": 30, "schools": 1, "deaths": 0, "treated": 1, "livestock": 0, "displaced": 40, "sick_men": 0, "sick_women": 0, "tstorm": 0, "rstorm": 0, "flood_villages": 0, "rain_villages": 0}], "disaster": [{"name": "Rainfall", "bn": "অতিবৃষ্টি", "color": "#2563EB", "submissions": 3, "displaced": 200, "agri": 150, "schools": 2, "treated": 5, "livestock": 1, "homes": 20, "sick_men": 0, "sick_women": 0, "tstorm": 0}, {"name": "Heatwave", "bn": "তাপদাহ", "color": "#EA580C", "submissions": 5, "displaced": 300, "agri": 200, "schools": 5, "treated": 20, "livestock": 3, "homes": 0, "sick_men": 18, "sick_women": 12, "tstorm": 0}, {"name": "Cold Wave", "bn": "শৈত্যপ্রবাহ", "color": "#0891B2", "submissions": 2, "displaced": 0, "agri": 100, "schools": 3, "treated": 8, "livestock": 2, "homes": 0, "sick_men": 6, "sick_women": 5, "tstorm": 0}, {"name": "Drought", "bn": "খরা", "color": "#B45309", "submissions": 2, "displaced": 400, "agri": 300, "schools": 5, "treated": 8, "livestock": 2, "homes": 0, "sick_men": 4, "sick_women": 2, "tstorm": 0}, {"name": "Flood", "bn": "বন্যা", "color": "#0D9488", "submissions": 2, "displaced": 300, "agri": 100, "schools": 3, "treated": 4, "livestock": 0, "homes": 100, "sick_men": 0, "sick_women": 0, "tstorm": 0}, {"name": "Thunderstorm", "bn": "বজ্রঝড়", "color": "#7C3AED", "submissions": 0, "displaced": 0, "agri": 0, "schools": 0, "treated": 0, "livestock": 0, "homes": 0, "sick_men": 0, "sick_women": 0, "tstorm": 0}, {"name": "Rain Storm", "bn": "বৃষ্টিঝড়", "color": "#0369A1", "submissions": 0, "displaced": 0, "agri": 0, "schools": 0, "treated": 0, "livestock": 0, "homes": 0, "sick_men": 0, "sick_women": 0, "tstorm": 0}], "raw": [{"date": "2026-06-06", "upazila": "Kurigram Sadar", "union": "ঘোগাদহ", "disaster": "Heatwave", "homes": 0, "agri": 0, "deaths": 0, "treated": 0, "schools": 0, "displaced": 0, "sick_men": 2, "sick_women": 0, "tstorm": 0, "rstorm": 0, "needs": "না", "respondent": "Atikur Rahman", "lat": 25.831, "lon": 89.732}, {"date": "2026-06-05", "upazila": "Nageshwari", "union": "নুনখাওয়া", "disaster": "Flood", "homes": 60, "agri": 250, "deaths": 2, "treated": 18, "schools": 5, "displaced": 500, "sick_men": 0, "sick_women": 0, "tstorm": 0, "rstorm": 0, "needs": "Dry food, tarpaulin", "respondent": "Md. Rafiqul Islam", "lat": 26.002, "lon": 89.894}, {"date": "2026-06-04", "upazila": "Ulipur", "union": "হাতিয়া", "disaster": "Heatwave", "homes": 0, "agri": 40, "deaths": 0, "treated": 5, "schools": 2, "displaced": 80, "sick_men": 3, "sick_women": 2, "tstorm": 0, "rstorm": 0, "needs": "ORS, water", "respondent": "Nasrin Akter", "lat": 25.673, "lon": 89.508}, {"date": "2026-06-03", "upazila": "Rowmari", "union": "যদুরচর", "disaster": "Flood", "homes": 12, "agri": 100, "deaths": 0, "treated": 4, "schools": 2, "displaced": 180, "sick_men": 0, "sick_women": 0, "tstorm": 0, "rstorm": 0, "needs": "Food", "respondent": "Fatema Begum", "lat": 25.549, "lon": 89.757}, {"date": "2026-06-02", "upazila": "Bhurungamari", "union": "শিলকূড়ী", "disaster": "Cold Wave", "homes": 0, "agri": 200, "deaths": 0, "treated": 8, "schools": 4, "displaced": 300, "sick_men": 6, "sick_women": 4, "tstorm": 0, "rstorm": 0, "needs": "Blankets", "respondent": "Roksana Khatun", "lat": 26.114, "lon": 89.718}], "generated": "2026-06-16 12:00"};
 
 let DATA = EMBEDDED;
 let activeUZ = 'all', activeDis = 'all';
@@ -312,7 +332,8 @@ const KPI_CFG = [
 
 const DIS_COLORS = {
   'Flood':'#0D9488','Rainfall':'#2563EB','Heatwave':'#EA580C',
-  'Cold Wave':'#0891B2','Drought':'#B45309','Unknown':'#64748B'
+  'Cold Wave':'#0891B2','Drought':'#B45309',
+  'Thunderstorm':'#7C3AED','Rain Storm':'#0369A1','Unknown':'#64748B'
 };
 
 const UZ_COORDS = {
@@ -322,104 +343,132 @@ const UZ_COORDS = {
   'Rajibpur':[25.549,89.840],
 };
 
-// ── Filter helpers ──────────────────────────────────────────
-function filteredRows() {
-  return DATA.raw.filter(r => {
-    const uzOK  = activeUZ  === 'all' || r.upazila === activeUZ;
-    const disOK = activeDis === 'all' || (r.disaster||'').includes(activeDis);
-    return uzOK && disOK;
+const UP_MAP = {
+  'up_1':'যাত্রাপুর','up_2':'বেলগাছা','up_3':'পোড়াদহ','up_4':'কাঁঠালবাড়ী',
+  'up_5':'ঘোগাদহ','up_6':'হাতিয়া','up_7':'উলিপুর','up_8':'বজরা',
+  'up_9':'তবকপুর','up_10':'গুনাইগাছ','up_11':'সাহেবের আলগা','up_12':'রামখানা',
+  'up_13':'ধর্মপাল','up_14':'রায়গঞ্জ','up_15':'বেরুবাড়ী','up_16':'নুনখাওয়া',
+  'up_17':'ভোগডাঙ্গা','up_18':'কচুয়া','up_19':'ছাতনাই','up_20':'রৌমারী',
+  'up_21':'যদুরচর','up_22':'বন্দবেড়','up_23':'শিলকূড়ী','up_24':'ভুরুঙ্গামারী',
+  'up_25':'পাথরডুবি','up_26':'বলদিয়া','up_27':'তিলাই','up_28':'চর ভুরুঙ্গামারী',
+  'up_29':'চিলমারী','up_30':'রানীগঞ্জ','up_31':'অষ্টমীর চর','up_32':'থানাহাট',
+};
+function resolveUnion(raw){if(!raw)return'—';return UP_MAP[raw]||raw;}
+
+// ── Filter helpers ───────────────────────────────────────────
+function filteredRows(){
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+  return DATA.raw.filter(r=>{
+    if(activeUZ!=='all' && r.upazila!==activeUZ) return false;
+    if(activeDis!=='all' && !(r.disaster||'').includes(activeDis)) return false;
+    if(from && r.date < from) return false;
+    if(to   && r.date > to)   return false;
+    return true;
   });
 }
 
-function kpisFromRows(rows) {
-  const sm = k => rows.reduce((s,r) => s+(r[k]||0), 0);
-  return {
-    submissions: rows.length,
-    homes:    sm('homes'),
-    agri:     Math.round(sm('agri')*10)/10,
-    schools:  sm('schools'),
-    deaths:   sm('deaths'),
-    treated:  sm('treated'),
-    livestock:sm('livestock'),
-    displaced:sm('displaced'),
-    sick_men: sm('sick_men'),
-    sick_women:sm('sick_women'),
+function kpisFromRows(rows){
+  const sm=k=>rows.reduce((s,r)=>s+(r[k]||0),0);
+  return{
+    submissions:rows.length,
+    homes:sm('homes'),agri:Math.round(sm('agri')*10)/10,
+    schools:sm('schools'),deaths:sm('deaths'),treated:sm('treated'),
+    livestock:sm('livestock'),displaced:sm('displaced'),
+    sick_men:sm('sick_men'),sick_women:sm('sick_women'),
+    tstorm:sm('tstorm'),rstorm:sm('rstorm'),
   };
 }
 
-function uzFromRows(rows) {
-  const map = {};
-  rows.forEach(r => {
-    const u = r.upazila||'Unknown';
-    if(!map[u]) map[u]={name:u,submissions:0,homes:0,agri:0,schools:0,deaths:0,treated:0,livestock:0,displaced:0,sick_men:0,sick_women:0,flood_villages:0,rain_villages:0};
+function uzFromRows(rows){
+  const map={};
+  rows.forEach(r=>{
+    const u=r.upazila||'Unknown';
+    if(!map[u])map[u]={name:u,submissions:0,homes:0,agri:0,schools:0,deaths:0,
+      treated:0,livestock:0,displaced:0,sick_men:0,sick_women:0,tstorm:0,rstorm:0};
     map[u].submissions++;
-    ['homes','agri','schools','deaths','treated','livestock','displaced','sick_men','sick_women','flood_villages','rain_villages'].forEach(k=>map[u][k]+=(r[k]||0));
+    ['homes','agri','schools','deaths','treated','livestock','displaced',
+     'sick_men','sick_women','thunder','rstorm','rain_trees'].forEach(k=>map[u][k]+=(r[k]||0));
   });
   return Object.values(map);
 }
 
-function disFromRows(rows) {
+function disFromRows(rows){
   const ALL=[
-    {name:'Rainfall', bn:'অতিবৃষ্টি', color:'#2563EB', hasgender:false},
-    {name:'Heatwave', bn:'তাপদাহ',    color:'#EA580C', hasgender:true},
-    {name:'Cold Wave',bn:'শৈত্যপ্রবাহ',color:'#0891B2',hasgender:true},
-    {name:'Drought',  bn:'খরা',       color:'#B45309', hasgender:true},
-    {name:'Flood',    bn:'বন্যা',      color:'#0D9488', hasgender:true},
+    {name:'Rainfall',   bn:'অতিবৃষ্টি',   color:'#2563EB',hasgender:false},
+    {name:'Heatwave',   bn:'তাপদাহ',       color:'#EA580C',hasgender:true},
+    {name:'Cold Wave',  bn:'শৈত্যপ্রবাহ',  color:'#0891B2',hasgender:true},
+    {name:'Drought',    bn:'খরা',           color:'#B45309',hasgender:true},
+    {name:'Flood',      bn:'বন্যা',         color:'#0D9488',hasgender:true},
+    {name:'Thunderstorm',bn:'বজ্রঝড়',      color:'#7C3AED',hasgender:false},
+    {name:'Rain Storm', bn:'বৃষ্টিঝড়',     color:'#0369A1',hasgender:false},
   ];
-  return ALL.map(d => {
-    const sub = rows.filter(r=>(r.disaster||'').includes(d.name));
-    return {...d,
+  return ALL.map(d=>{
+    const sub=rows.filter(r=>(r.disaster||'').includes(d.name));
+    return{...d,
       submissions:sub.length,
-      homes:   sub.reduce((s,r)=>s+(r.homes||0),0),
-      agri:    Math.round(sub.reduce((s,r)=>s+(r.agri||0),0)*10)/10,
-      schools: sub.reduce((s,r)=>s+(r.schools||0),0),
-      treated: sub.reduce((s,r)=>s+(r.treated||0),0),
+      homes:sub.reduce((s,r)=>s+(r.homes||0),0),
+      agri:Math.round(sub.reduce((s,r)=>s+(r.agri||0),0)*10)/10,
+      schools:sub.reduce((s,r)=>s+(r.schools||0),0),
+      treated:sub.reduce((s,r)=>s+(r.treated||0),0),
       livestock:sub.reduce((s,r)=>s+(r.livestock||0),0),
       displaced:sub.reduce((s,r)=>s+(r.displaced||0),0),
-      sick_men: sub.reduce((s,r)=>s+(r.sick_men||0),0),
+      sick_men:sub.reduce((s,r)=>s+(r.sick_men||0),0),
       sick_women:sub.reduce((s,r)=>s+(r.sick_women||0),0),
+      tstorm:sub.reduce((s,r)=>s+(r.tstorm||0),0),
     };
-  }).filter(d => activeDis==='all' || d.name===activeDis);
+  }).filter(d=>activeDis==='all'||d.name===activeDis);
 }
 
-// ── Master refresh ──────────────────────────────────────────
-function applyFilters() {
-  const rows    = filteredRows();
-  const kpis    = kpisFromRows(rows);
-  const uzData  = uzFromRows(rows);
-  const disData = disFromRows(rows);
+// ── Master refresh ───────────────────────────────────────────
+function applyFilters(){
+  const rows   =filteredRows();
+  const kpis   =kpisFromRows(rows);
+  const uzData =uzFromRows(rows);
+  const disData=disFromRows(rows);
   const parts=[];
-  if(activeUZ !=='all') parts.push(activeUZ);
-  if(activeDis!=='all') parts.push(activeDis);
-  const statusEl = document.getElementById('filter-status');
-  if(statusEl) statusEl.textContent = parts.length ? 'ফিল্টার: '+parts.join(' · ') : 'সকল তথ্য দেখানো হচ্ছে';
+  if(activeUZ!=='all')parts.push(activeUZ);
+  if(activeDis!=='all')parts.push(activeDis);
+  const f=document.getElementById('date-from').value;
+  const t=document.getElementById('date-to').value;
+  if(f||t)parts.push((f||'...')+' → '+(t||'...'));
+  const statusEl=document.getElementById('filter-status');
+  if(statusEl)statusEl.textContent=parts.length?'ফিল্টার: '+parts.join(' · '):'সকল তথ্য';
+  document.getElementById('row-count').textContent=rows.length+' টি প্রতিবেদন';
   renderKPIs(kpis);
-  renderGender(kpis, disData);
+  renderGender(kpis,disData);
   renderBars(uzData);
+  renderUZGenderBars(uzData);
   renderUzChart(uzData);
   renderDisTable(disData);
   renderDonut(disData);
   renderGrouped(disData);
   renderRaw(rows);
-  initMap(uzData, rows);
-  document.getElementById('footer-info').textContent =
-    rows.length+' টি প্রতিবেদন · '+(DATA.generated||'—');
+  initMap(uzData,rows);
+  document.getElementById('footer-info').textContent=rows.length+' টি প্রতিবেদন · '+(DATA.generated||'—');
 }
 
-window.onload = () => {
+function resetFilters(){
+  activeUZ='all';activeDis='all';
+  document.getElementById('uz-select').value='all';
+  document.getElementById('dis-select').value='all';
+  document.getElementById('date-from').value='';
+  document.getElementById('date-to').value='';
+  applyFilters();
+}
+
+window.onload=()=>{
   renderUZDropdown(DATA.upazila);
-  document.getElementById('update-time').textContent = DATA.generated||'—';
-  document.getElementById('footer-info').textContent =
-    DATA.kpis.submissions+' টি প্রতিবেদন · '+(DATA.generated||'—');
+  document.getElementById('update-time').textContent=DATA.generated||'—';
   applyFilters();
 };
 
-function setUZ(val)  { activeUZ =val; applyFilters(); }
-function setDis(val) { activeDis=val; applyFilters(); }
+function setUZ(val){activeUZ=val;applyFilters();}
+function setDis(val){activeDis=val;applyFilters();}
 
-// ── Render functions ────────────────────────────────────────
-function renderKPIs(k) {
-  document.getElementById('kpi-grid').innerHTML = KPI_CFG.map(c => `
+// ── Render functions ─────────────────────────────────────────
+function renderKPIs(k){
+  document.getElementById('kpi-grid').innerHTML=KPI_CFG.map(c=>`
     <div class="kpi">
       <div class="kpi-accent" style="background:linear-gradient(90deg,${c.accent},${c.color})"></div>
       <div class="kpi-icon" style="background:${c.bg}">${c.icon}</div>
@@ -429,56 +478,69 @@ function renderKPIs(k) {
     </div>`).join('');
 }
 
-function renderGender(kpis, disData) {
-  const men   = kpis.sick_men   || 0;
-  const women = kpis.sick_women || 0;
-  const total = men + women;
-  const pctM  = total ? Math.round(men/total*100)   : 0;
-  const pctW  = total ? Math.round(women/total*100) : 0;
-  const fmt = n => n.toLocaleString();
-  document.getElementById('gender-men').textContent       = fmt(men);
-  document.getElementById('gender-women').textContent     = fmt(women);
-  document.getElementById('gender-men-pct').textContent   = total ? pctM+'%' : '—';
-  document.getElementById('gender-women-pct').textContent = total ? pctW+'%' : '—';
-  document.getElementById('gender-total-badge').textContent= 'মোট: '+fmt(total);
-  document.getElementById('gender-bar-men').style.width   = (total?pctM:50)+'%';
-  document.getElementById('gender-bar-women').style.width = (total?pctW:50)+'%';
-  // per-disaster table — only show disasters that have gender fields
-  const genderDis = disData.filter(d=>d.hasgender);
-  document.getElementById('gender-tbody').innerHTML = genderDis.map(d => {
-    const t  = (d.sick_men||0)+(d.sick_women||0);
-    const pm = t ? Math.round((d.sick_men||0)/t*100)   : 0;
-    const pw = t ? Math.round((d.sick_women||0)/t*100) : 0;
-    return `<tr>
-      <td><div class="dis-badge"><div class="dis-dot" style="background:${d.color}"></div>
-        <div><span>${d.name}</span><span class="dis-bn">${d.bn}</span></div></div></td>
-      <td style="color:#1D4ED8;font-weight:600">${fmt(d.sick_men||0)}</td>
-      <td style="color:#BE185D;font-weight:600">${fmt(d.sick_women||0)}</td>
-      <td style="font-weight:700">${fmt(t)}</td>
-      <td><div style="display:flex;align-items:center;gap:6px">
-        <div style="flex:1;height:8px;background:#DBEAFE;border-radius:4px;overflow:hidden">
-          <div style="width:${pm}%;height:100%;background:#2563EB;border-radius:4px"></div></div>
-        <span style="font-size:11px;color:#1D4ED8;width:32px">${t?pm+'%':'—'}</span>
-      </div></td>
-      <td><div style="display:flex;align-items:center;gap:6px">
-        <div style="flex:1;height:8px;background:#FCE7F3;border-radius:4px;overflow:hidden">
-          <div style="width:${pw}%;height:100%;background:#BE185D;border-radius:4px"></div></div>
-        <span style="font-size:11px;color:#BE185D;width:32px">${t?pw+'%':'—'}</span>
-      </div></td>
-    </tr>`;
+function renderGender(kpis,disData){
+  const men=kpis.sick_men||0,women=kpis.sick_women||0,total=men+women;
+  const pctM=total?Math.round(men/total*100):0;
+  const pctW=total?Math.round(women/total*100):0;
+  const fmt=n=>n.toLocaleString();
+  document.getElementById('gender-men').textContent=fmt(men);
+  document.getElementById('gender-women').textContent=fmt(women);
+  document.getElementById('gender-men-pct').textContent=total?pctM+'%':'—';
+  document.getElementById('gender-women-pct').textContent=total?pctW+'%':'—';
+  document.getElementById('gender-total-badge').textContent='মোট: '+fmt(total);
+  document.getElementById('gender-bar-men').style.width=(total?pctM:50)+'%';
+  document.getElementById('gender-bar-women').style.width=(total?pctW:50)+'%';
+  // mini per-disaster breakdown
+  const gd=disData.filter(d=>d.hasgender&&(d.sick_men||d.sick_women)>0);
+  document.getElementById('gender-dis-mini').innerHTML=gd.map(d=>{
+    const t=(d.sick_men||0)+(d.sick_women||0);
+    const pm=t?Math.round((d.sick_men||0)/t*100):0;
+    return`<div style="margin-bottom:3px">
+      <span style="color:${d.color};font-weight:600">${d.bn}</span>
+      <span style="color:#1D4ED8;margin-left:6px">👨${d.sick_men||0}</span>
+      <span style="color:#BE185D;margin-left:6px">👩${d.sick_women||0}</span>
+      <div style="height:5px;background:#F1F5F9;border-radius:3px;overflow:hidden;margin-top:2px">
+        <div style="width:${pm}%;height:100%;background:#2563EB;border-radius:3px"></div>
+      </div></div>`;
+  }).join('')||'<span style="color:#94A3B8">No gender data for current filter</span>';
+}
+
+function renderUZGenderBars(uzData){
+  const src=uzData.filter(u=>(u.sick_men||0)+(u.sick_women||0)>0);
+  if(!src.length){
+    document.getElementById('uz-gender-bars').innerHTML='<div style="color:#94A3B8;font-size:12px;padding:8px">কোনো লিঙ্গ তথ্য নেই এই ফিল্টারে</div>';
+    return;
+  }
+  const maxT=Math.max(...src.map(u=>(u.sick_men||0)+(u.sick_women||0)),1);
+  document.getElementById('uz-gender-bars').innerHTML=src.map(u=>{
+    const men=u.sick_men||0,women=u.sick_women||0,t=men+women;
+    const pm=t?Math.round(men/t*100):50;
+    const pw=t?Math.round(women/t*100):50;
+    return`<div class="bar-item" style="margin-bottom:10px">
+      <div class="bar-name">${u.name}</div>
+      <div style="flex:1">
+        <div style="display:flex;height:16px;border-radius:4px;overflow:hidden;border:1px solid #E2E8F0">
+          <div style="width:${Math.round(t/maxT*100)}%;display:flex">
+            <div style="width:${pm}%;background:#2563EB;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:white">${men>0?men:''}</div>
+            <div style="width:${pw}%;background:#EC4899;display:flex;align-items:center;padding-left:4px;font-size:9px;color:white">${women>0?women:''}</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#64748B;margin-top:2px">👨${men} · 👩${women} · মোট ${t}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 
-function renderUZDropdown(uzData) {
-  const sel = document.getElementById('uz-select');
-  sel.innerHTML = '<option value="all">সকল উপজেলা — All Upazilas</option>' +
+function renderUZDropdown(uzData){
+  const sel=document.getElementById('uz-select');
+  sel.innerHTML='<option value="all">সকল উপজেলা — All</option>'+
     uzData.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
 }
 
-function renderBars(uzData) {
+function renderBars(uzData){
   if(!uzData.length){
     document.getElementById('homes-bars').innerHTML='<div style="color:#94A3B8;font-size:12px;padding:8px">কোনো তথ্য নেই</div>';
-    document.getElementById('agri-bars').innerHTML ='<div style="color:#94A3B8;font-size:12px;padding:8px">কোনো তথ্য নেই</div>';
+    document.getElementById('agri-bars').innerHTML='<div style="color:#94A3B8;font-size:12px;padding:8px">কোনো তথ্য নেই</div>';
     return;
   }
   const maxH=Math.max(...uzData.map(u=>u.homes),1);
@@ -497,7 +559,7 @@ function renderBars(uzData) {
     </div>`).join('');
 }
 
-function renderDisTable(disData) {
+function renderDisTable(disData){
   const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
   document.getElementById('dis-tbody').innerHTML=src.map(d=>`
     <tr>
@@ -506,42 +568,45 @@ function renderDisTable(disData) {
       <td><span class="num-pill" style="background:color-mix(in srgb,${d.color} 15%,white);color:${d.color}">${d.submissions}</span></td>
       <td>${d.displaced}</td><td>${d.agri}</td><td>${d.homes}</td>
       <td>${d.schools}</td><td>${d.treated}</td><td>${d.livestock}</td>
+      <td style="color:#1D4ED8;font-weight:600">${d.hasgender?(d.sick_men||0):'—'}</td>
+      <td style="color:#BE185D;font-weight:600">${d.hasgender?(d.sick_women||0):'—'}</td>
+      <td style="color:#7C3AED">${d.thunder||0}</td>
     </tr>`).join('');
 }
 
-function renderDonut(disData) {
+function renderDonut(disData){
   const ctx=document.getElementById('dis-donut').getContext('2d');
-  if(donutChart) donutChart.destroy();
+  if(donutChart)donutChart.destroy();
   const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
   donutChart=new Chart(ctx,{
     type:'doughnut',
     data:{labels:src.map(d=>d.bn),datasets:[{data:src.map(d=>d.submissions||1),backgroundColor:src.map(d=>d.color),borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},boxWidth:12,padding:12}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},boxWidth:12,padding:10}}}}
   });
 }
 
-function renderGrouped(disData) {
+function renderGrouped(disData){
   const ctx=document.getElementById('dis-grouped').getContext('2d');
-  if(groupedChart) groupedChart.destroy();
+  if(groupedChart)groupedChart.destroy();
   const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
   groupedChart=new Chart(ctx,{
     type:'bar',
     data:{
       labels:src.map(d=>d.bn),
       datasets:[
-        {label:'বিদ্যালয় বন্ধ', data:src.map(d=>d.schools),  backgroundColor:'#7C3AED',borderRadius:4},
-        {label:'চিকিৎসা',        data:src.map(d=>d.treated),  backgroundColor:'#059669',borderRadius:4},
-        {label:'👨 পুরুষ আক্রান্ত',data:src.map(d=>d.sick_men||0), backgroundColor:'#2563EB',borderRadius:4},
-        {label:'👩 মহিলা আক্রান্ত',data:src.map(d=>d.sick_women||0),backgroundColor:'#EC4899',borderRadius:4},
+        {label:'👨 পুরুষ আক্রান্ত', data:src.map(d=>d.sick_men||0), backgroundColor:'#2563EB',borderRadius:4},
+        {label:'👩 মহিলা আক্রান্ত', data:src.map(d=>d.sick_women||0), backgroundColor:'#EC4899',borderRadius:4},
+        {label:'চিকিৎসা',           data:src.map(d=>d.treated),       backgroundColor:'#10B981',borderRadius:4},
+        {label:'বিদ্যালয় বন্ধ',    data:src.map(d=>d.schools),       backgroundColor:'#7C3AED',borderRadius:4},
       ]
     },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:10},boxWidth:10}}},scales:{x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:10},boxWidth:10,padding:8}}},scales:{x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}}}}
   });
 }
 
-function renderUzChart(uzData) {
+function renderUzChart(uzData){
   const ctx=document.getElementById('uz-chart').getContext('2d');
-  if(uzChart) uzChart.destroy();
+  if(uzChart)uzChart.destroy();
   uzChart=new Chart(ctx,{
     type:'bar',
     data:{
@@ -550,50 +615,38 @@ function renderUzChart(uzData) {
         {label:'বাড়িঘর / Homes',    data:uzData.map(u=>u.homes),    backgroundColor:'#EF4444',borderRadius:4},
         {label:'কৃষিজমি / Agri',    data:uzData.map(u=>u.agri),     backgroundColor:'#F59E0B',borderRadius:4},
         {label:'চিকিৎসা / Treated', data:uzData.map(u=>u.treated),  backgroundColor:'#10B981',borderRadius:4},
-        {label:'পশু মৃত্যু / Livestock',data:uzData.map(u=>u.livestock),backgroundColor:'#8B5CF6',borderRadius:4},
+        {label:'👨 পুরুষ',          data:uzData.map(u=>u.sick_men||0),  backgroundColor:'#2563EB',borderRadius:4},
+        {label:'👩 মহিলা',          data:uzData.map(u=>u.sick_women||0),backgroundColor:'#EC4899',borderRadius:4},
       ]
     },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:11},boxWidth:12,padding:10}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569'},grid:{color:'#F1F5F9'}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:10},boxWidth:10,padding:8}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569'},grid:{color:'#F1F5F9'}}}}
   });
 }
 
-function initMap(uzData, rawRows) {
-  if(leafMap) { leafMap.remove(); leafMap = null; }
-  leafMap = L.map('map').setView([25.80, 89.64], 10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap', maxZoom:18
-  }).addTo(leafMap);
+function initMap(uzData,rawRows){
+  if(leafMap){leafMap.remove();leafMap=null;}
+  leafMap=L.map('map').setView([25.80,89.64],10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(leafMap);
   L.rectangle([[25.50,89.30],[26.15,89.95]],{color:'#0D9488',weight:2,fillOpacity:0.04}).addTo(leafMap);
-
-  const uzCount = {};
-  rawRows.forEach(r => {
-    const uz = r.upazila || 'Unknown';
-    if(!uzCount[uz]) uzCount[uz] = {total:0,disasters:{},homes:0,agri:0,deaths:0,treated:0,displaced:0};
+  const uzCount={};
+  rawRows.forEach(r=>{
+    const uz=r.upazila||'Unknown';
+    if(!uzCount[uz])uzCount[uz]={total:0,disasters:{},homes:0,agri:0,deaths:0,treated:0,displaced:0,sick_men:0,sick_women:0};
     uzCount[uz].total++;
-    uzCount[uz].homes    += r.homes    || 0;
-    uzCount[uz].agri     += r.agri     || 0;
-    uzCount[uz].deaths   += r.deaths   || 0;
-    uzCount[uz].treated  += r.treated  || 0;
-    uzCount[uz].displaced+= r.displaced|| 0;
-    const dis = r.disaster || 'Unknown';
-    uzCount[uz].disasters[dis] = (uzCount[uz].disasters[dis]||0)+1;
+    ['homes','agri','deaths','treated','displaced','sick_men','sick_women'].forEach(k=>uzCount[uz][k]+=(r[k]||0));
+    const dis=r.disaster||'Unknown';
+    uzCount[uz].disasters[dis]=(uzCount[uz].disasters[dis]||0)+1;
   });
-
-  // Also add from uzData if no raw rows have coords
-  uzData.forEach(u => {
-    if(!uzCount[u.name]) uzCount[u.name] = {total:u.submissions,disasters:{},homes:u.homes,agri:u.agri,deaths:u.deaths,treated:u.treated,displaced:u.displaced||0};
-  });
-
-  Object.entries(uzCount).forEach(([uz, info]) => {
-    const coords = UZ_COORDS[uz];
-    if(!coords) return;
-    const topDis = Object.entries(info.disasters).sort((a,b)=>b[1]-a[1])[0];
-    const color = topDis ? (DIS_COLORS[topDis[0]]||'#64748B') : '#0D9488';
-    const radius = Math.max(8, Math.min(28, info.total * 3));
-    const disStr = Object.entries(info.disasters).map(([d,c])=>`${d}: ${c}`).join('<br>') || 'Flood';
-    L.circleMarker(coords, {radius,fillColor:color,color:'#fff',weight:2,fillOpacity:0.85})
+  uzData.forEach(u=>{if(!uzCount[u.name])uzCount[u.name]={total:u.submissions,disasters:{},homes:u.homes,agri:u.agri,deaths:u.deaths,treated:u.treated,displaced:u.displaced||0,sick_men:u.sick_men||0,sick_women:u.sick_women||0};});
+  Object.entries(uzCount).forEach(([uz,info])=>{
+    const coords=UZ_COORDS[uz];if(!coords)return;
+    const topDis=Object.entries(info.disasters).sort((a,b)=>b[1]-a[1])[0];
+    const color=topDis?(DIS_COLORS[topDis[0]]||'#64748B'):'#0D9488';
+    const radius=Math.max(8,Math.min(28,info.total*3));
+    const disStr=Object.entries(info.disasters).map(([d,c])=>`${d}: ${c}`).join('<br>')||'—';
+    L.circleMarker(coords,{radius,fillColor:color,color:'#fff',weight:2,fillOpacity:0.85})
       .addTo(leafMap)
-      .bindPopup(`<div style="font-family:Segoe UI,sans-serif;min-width:170px">
+      .bindPopup(`<div style="font-family:Segoe UI,sans-serif;min-width:180px">
         <div style="font-weight:700;font-size:13px;color:#0F172A;border-bottom:2px solid ${color};padding-bottom:4px;margin-bottom:8px">${uz}</div>
         <div style="font-size:12px;color:#475569;line-height:1.9">
           📋 Submissions: <strong>${info.total}</strong><br>
@@ -601,59 +654,65 @@ function initMap(uzData, rawRows) {
           🌾 Agri: <strong>${info.agri} shotok</strong><br>
           💧 Deaths: <strong>${info.deaths}</strong><br>
           🏥 Treated: <strong>${info.treated}</strong><br>
+          👨 Male: <strong>${info.sick_men}</strong> &nbsp; 👩 Female: <strong>${info.sick_women}</strong><br>
           🏕️ Displaced: <strong>${info.displaced}</strong><br>
           <br><strong>Disasters:</strong><br>${disStr}
         </div></div>`);
   });
-
-  const legend = document.getElementById('map-legend');
-  if(legend) {
-    legend.innerHTML = Object.entries(DIS_COLORS).slice(0,5).map(([name,color])=>
-      `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#475569;background:#F8FAFC;padding:3px 9px;border-radius:6px;border:1px solid #E2E8F0">
-        <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block"></span>${name}
-      </span>`).join('');
-  }
+  const legend=document.getElementById('map-legend');
+  if(legend)legend.innerHTML=Object.entries(DIS_COLORS).slice(0,7).map(([name,color])=>
+    `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#475569;background:#F8FAFC;padding:2px 8px;border-radius:6px;border:1px solid #E2E8F0">
+      <span style="width:9px;height:9px;border-radius:50%;background:${color};display:inline-block"></span>${name}
+    </span>`).join('');
 }
 
-// Union code → display name mapping
-const UP_MAP = {
-  'up_1':'যাত্রাপুর','up_2':'বেলগাছা','up_3':'পোড়াদহ','up_4':'কাঁঠালবাড়ী',
-  'up_5':'ঘোগাদহ','up_6':'হাতিয়া','up_7':'উলিপুর','up_8':'বজরা',
-  'up_9':'তবকপুর','up_10':'গুনাইগাছ','up_11':'সাহেবের আলগা','up_12':'রামখানা',
-  'up_13':'ধর্মপাল','up_14':'রায়গঞ্জ','up_15':'বেরুবাড়ী','up_16':'নুনখাওয়া',
-  'up_17':'ভোগডাঙ্গা','up_18':'কচুয়া','up_19':'ছাতনাই','up_20':'রৌমারী',
-  'up_21':'যদুরচর','up_22':'বন্দবেড়','up_23':'শিলকূড়ী','up_24':'ভুরুঙ্গামারী',
-  'up_25':'পাথরডুবি','up_26':'বলদিয়া','up_27':'তিলাই','up_28':'চর ভুরুঙ্গামারী',
-  'up_29':'চিলমারী','up_30':'রানীগঞ্জ','up_31':'অষ্টমীর চর','up_32':'থানাহাট',
-  'Nun Khawa':'নুনখাওয়া — Nunkhawa','Berubari':'বেরুবাড়ী — Berubari',
-  'Ghogadah':'ঘোগাদহ — Ghogadah','Hatia':'হাতিয়া — Hatia',
-  'Jadur Char':'যদুরচর — Jadur Char','Silkuri':'শিলকূড়ী — Silkuri',
-};
-
-function resolveUnion(raw) {
-  if (!raw) return '—';
-  return UP_MAP[raw] || raw;
-}
-
-function renderRaw(rows) {
-  document.getElementById('raw-tbody').innerHTML = rows.map(r => {
-    const col = DIS_COLORS[r.disaster] || '#64748B';
-    return `<tr>
+function renderRaw(rows){
+  document.getElementById('raw-tbody').innerHTML=rows.map(r=>{
+    const col=DIS_COLORS[r.disaster]||'#64748B';
+    const tstorm=r.tstorm||0, rstorm=r.rstorm||0;
+    return`<tr>
       <td style="color:#64748B;white-space:nowrap">${r.date}</td>
       <td style="font-weight:600;color:#0F172A">${r.upazila}</td>
       <td>${resolveUnion(r.union)}</td>
       <td><span class="tag" style="background:color-mix(in srgb,${col} 12%,white);color:${col}">${r.disaster}</span></td>
       <td style="color:${r.homes>0?'#DC2626':'#94A3B8'};font-weight:${r.homes>0?600:400}">${r.homes}</td>
-      <td style="color:${r.agri>0?'#D97706':'#94A3B8'};font-weight:${r.agri>0?600:400}">${r.agri}</td>
+      <td style="color:${r.agri>0?'#D97706':'#94A3B8'}">${r.agri}</td>
       <td style="color:${r.deaths>0?'#DC2626':'#94A3B8'};font-weight:${r.deaths>0?600:400}">${r.deaths}</td>
       <td style="color:${r.treated>0?'#059669':'#94A3B8'}">${r.treated}</td>
       <td style="color:${(r.sick_men||0)>0?'#1D4ED8':'#94A3B8'};font-weight:${(r.sick_men||0)>0?600:400}">${r.sick_men||0}</td>
       <td style="color:${(r.sick_women||0)>0?'#BE185D':'#94A3B8'};font-weight:${(r.sick_women||0)>0?600:400}">${r.sick_women||0}</td>
+      <td style="color:${(r.thunder||0)>0?'#7C3AED':'#94A3B8'};font-weight:${(r.thunder||0)>0?600:400}" title="${r.thunder_loss||''}">${(r.thunder||0)>0?'⚡ হ্যাঁ':'না'}</td>
+      <td style="color:${(r.rstorm||0)>0?'#0369A1':'#94A3B8'};font-weight:${(r.rstorm||0)>0?600:400}" title="${r.rstorm_loss||''}">${(r.rstorm||0)>0?'🌧 হ্যাঁ':'না'}</td>
       <td>${r.schools}</td>
-      <td style="color:#64748B;font-size:11px">${r.needs||'—'}</td>
-      <td style="color:#475569;font-size:11px;font-weight:500">${r.respondent||'—'}</td>
+      <td style="color:#64748B;font-size:10px">${r.needs||'—'}</td>
+      <td style="color:#475569;font-size:10px;font-weight:500">${r.respondent||'—'}</td>
     </tr>`;
   }).join('');
+}
+
+// ── Export functions ─────────────────────────────────────────
+function exportExcel(){
+  const rows=filteredRows();
+  const ws_data=[
+    ['তারিখ','উপজেলা','ইউনিয়ন','দুর্যোগ','বাড়িঘর','কৃষি(শতক)',
+     'মৃত্যু','চিকিৎসা','পুরুষ','মহিলা','বজ্রঝড়','বৃষ্টিঝড়',
+     'বিদ্যালয়','বাস্তুচ্যুত','প্রয়োজন','তথ্য সংগ্রহকারী'],
+    ...rows.map(r=>[r.date,r.upazila,resolveUnion(r.union),r.disaster,
+      r.homes,r.agri,r.deaths,r.treated,r.sick_men||0,r.sick_women||0,
+      r.thunder||0,r.rstorm||0,r.schools,r.displaced,r.needs||'',r.respondent||''])
+  ];
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols']=[{wch:12},{wch:16},{wch:18},{wch:14},{wch:8},{wch:10},
+               {wch:8},{wch:10},{wch:8},{wch:8},{wch:8},{wch:8},
+               {wch:10},{wch:12},{wch:25},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,'SITREP');
+  const date=new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb,`Kurigram_SITREP_${date}.xlsx`);
+}
+
+function exportPDF(){
+  window.print();
 }
 </script>
 </body>
