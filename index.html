@@ -460,11 +460,12 @@ function resetFilters(){
 window.onerror=function(msg,src,line){
   document.getElementById('kpi-grid').innerHTML='<div style="color:red;padding:20px;font-size:13px">JS Error: '+msg+' (line '+line+')</div>';
 };
-window.onload=()=>{
+window.addEventListener('DOMContentLoaded', ()=>{
   renderUZDropdown(DATA.upazila);
   document.getElementById('update-time').textContent=DATA.generated||'—';
-  applyFilters();
-};
+  // Small delay to ensure CDN libraries are fully loaded
+  setTimeout(applyFilters, 100);
+});
 
 function setUZ(val){activeUZ=val;applyFilters();}
 function setDis(val){activeDis=val;applyFilters();}
@@ -577,7 +578,7 @@ function renderDisTable(disData){
     </tr>`).join('');
 }
 
-function renderDonut(disData){
+function renderDonut(disData){try{
   const ctx=document.getElementById('dis-donut').getContext('2d');
   if(donutChart)donutChart.destroy();
   const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
@@ -586,9 +587,10 @@ function renderDonut(disData){
     data:{labels:src.map(d=>d.bn),datasets:[{data:src.map(d=>d.submissions||1),backgroundColor:src.map(d=>d.color),borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11},boxWidth:12,padding:10}}}}
   });
+  }catch(e){console.warn('Chart.js not ready:',e);}
 }
 
-function renderGrouped(disData){
+function renderGrouped(disData){try{
   const ctx=document.getElementById('dis-grouped').getContext('2d');
   if(groupedChart)groupedChart.destroy();
   const src=disData.filter(d=>d.submissions>0).length?disData.filter(d=>d.submissions>0):disData;
@@ -605,9 +607,10 @@ function renderGrouped(disData){
     },
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:10},boxWidth:10,padding:8}}},scales:{x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#F1F5F9'}}}}
   });
+  }catch(e){console.warn('Chart.js not ready:',e);}
 }
 
-function renderUzChart(uzData){
+function renderUzChart(uzData){try{
   const ctx=document.getElementById('uz-chart').getContext('2d');
   if(uzChart)uzChart.destroy();
   uzChart=new Chart(ctx,{
@@ -624,9 +627,10 @@ function renderUzChart(uzData){
     },
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#475569',font:{size:10},boxWidth:10,padding:8}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'#F1F5F9'}},y:{ticks:{color:'#475569'},grid:{color:'#F1F5F9'}}}}
   });
+  }catch(e){console.warn('Chart.js not ready:',e);}
 }
 
-function initMap(uzData,rawRows){
+function initMap(uzData,rawRows){try{
   if(leafMap){leafMap.remove();leafMap=null;}
   leafMap=L.map('map').setView([25.80,89.64],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(leafMap);
@@ -667,6 +671,7 @@ function initMap(uzData,rawRows){
     `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#475569;background:#F8FAFC;padding:2px 8px;border-radius:6px;border:1px solid #E2E8F0">
       <span style="width:9px;height:9px;border-radius:50%;background:${color};display:inline-block"></span>${name}
     </span>`).join('');
+  }catch(e){console.warn('Leaflet not ready:',e);}
 }
 
 function renderRaw(rows){
