@@ -372,8 +372,27 @@ def update_html(data):
         print(f"❌ {OUTPUT} not found."); sys.exit(1)
     with open(OUTPUT, "r", encoding="utf-8") as f:
         html = f.read()
-    new_data = f"const EMBEDDED = {json.dumps(data, ensure_ascii=False)};"
-    html = re.sub(r"const EMBEDDED = \{.*?\};", new_data, html, flags=re.DOTALL)
+    # Sanitize string fields to prevent JS syntax errors from special chars
+    def sanitize(obj):
+        if isinstance(obj, str):
+            return obj.replace("\\", "").replace("\r", "").replace("\x00", "")
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [sanitize(i) for i in obj]
+        return obj
+    clean_data = sanitize(data)
+    new_json = json.dumps(clean_data, ensure_ascii=True, separators=(',', ':'))
+    # Target the <script type="application/json"> tag
+    html = re.sub(
+        r'(<script id="D" type="application/json">).*?(</script>)',
+        r'\1\n' + new_json + r'\n\2',
+        html, flags=re.DOTALL
+    )
+    # Fallback: also try old pattern
+    if 'const EMBEDDED = ' in html:
+        html = re.sub(r"const EMBEDDED = \{.*?\};",
+                      f"const EMBEDDED = {new_json};", html, flags=re.DOTALL)
     with open(OUTPUT, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"\n✅ {OUTPUT} updated")
